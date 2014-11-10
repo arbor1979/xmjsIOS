@@ -7,17 +7,41 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "ASIHTTPRequest.h"
 #import "NSString+URLEncoding.h"
+#import "GTMBase64.h"
+#import "LFCGzipUtillity.h"
+#import "UIImage+Scale.h"
+#import "OLGhostAlertView.h"
 @interface DDIClassAttend : UIViewController <UITableViewDataSource,UITableViewDelegate>
-
+{
+    UIBarButtonItem *rightBtn;
+}
 @property (strong,nonatomic) NSString *banjiName;
 @property (strong,nonatomic) NSString *classNo;
 @property (strong,nonatomic) NSNumber *classIndex;
-
+@property (strong,nonatomic) NSMutableArray *requestArray;
 @property (strong,nonatomic) NSMutableData *datas;
+
+@property (strong,nonatomic) NSMutableArray *scheduleArray; //上课记录
+@property (strong,nonatomic) NSMutableDictionary *classInfoDic;//本节课信息
+@property (strong,nonatomic) NSMutableDictionary *studentDic;  //本班学生信息
+@property (strong,nonatomic) NSMutableArray *stuKaoQinArray; //本班学生本节课缺勤记录
+@property (strong,nonatomic) NSMutableDictionary *headImageDic;
+
+@property (strong,nonatomic) NSArray *sectionArray;     //姓名第一个字母
+@property (strong,nonatomic) NSArray *kaoqinNameArray;//考勤名称数组
+
+
+@property (strong,nonatomic) NSMutableArray *imageSel; //绿色选中图片
+@property (strong,nonatomic) NSMutableArray *imageDes; //灰色未选中图片
+@property (strong,nonatomic) UIImage *imageMan;  //默认男生头像
+@property (strong,nonatomic) UIImage *imageWoman; //默认女生头像
+@property (strong,nonatomic) NSString *savePath;//头像保存位置
 
 - (IBAction)dingMingClick:(id)sender;
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
+
 
 
 @end

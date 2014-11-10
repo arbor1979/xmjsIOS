@@ -10,6 +10,7 @@
 #import "ChineseString.h"
 #import "pinyin.h"
 #import "GTMBase64.h"
+#import "DDIStudentInfo.h"
 
 @implementation DDIClassAttend
 extern NSMutableDictionary *userInfoDic;
@@ -17,27 +18,13 @@ extern Boolean kIOS7;
 extern NSString *kServiceURL;
 extern NSString *kUserIndentify;
 
-NSMutableDictionary *studentDic;  //本班学生信息
-NSArray *sectionArray;     //姓名第一个字母
-NSDictionary *kaoqinData; //每个学生的出勤率
-NSMutableDictionary *allqueqinDic; //所有学生缺勤记录
-NSMutableDictionary *stuKaoQinDic; //本班学生本节课缺勤记录
 
 -(void) viewDidLoad
 {
 
     [super viewDidLoad];
-    //设置标签栏背景
-    id appearance = [UITabBar appearance];
-    UIImage *tabBarBackGroungImg =[UIImage imageNamed:@"navBottom"];
-    [appearance setBackgroundImage:tabBarBackGroungImg];
     
-    UIBarButtonItem *rightBtn= [[UIBarButtonItem alloc] initWithTitle:@"保存" style:UIBarButtonItemStyleBordered target:self action:@selector(saveAttend)];
-    if (kIOS7) {
-        [rightBtn setTintColor:[UIColor whiteColor]];
-    }
-    self.parentViewController.navigationItem.rightBarButtonItem=nil;
-    self.parentViewController.navigationItem.rightBarButtonItem =rightBtn;
+    rightBtn= [[UIBarButtonItem alloc] initWithTitle:@"保存" style:UIBarButtonItemStyleBordered target:self action:@selector(saveAttend)];
     
     //本班学生数组
     NSDictionary *tmpDic=[userInfoDic objectForKey:self.banjiName];
@@ -48,13 +35,31 @@ NSMutableDictionary *stuKaoQinDic; //本班学生本节课缺勤记录
     else
         tmpArray= [[NSArray alloc] initWithArray:tmpDic.allValues];
    
-    //所有缺勤学生
-    allqueqinDic=[[NSMutableDictionary alloc] initWithDictionary:[userInfoDic objectForKey:@"缺勤情况明细"]];
-    //本班缺勤学生
-    stuKaoQinDic=[[NSMutableDictionary alloc] initWithDictionary:[allqueqinDic objectForKey:self.classNo]];
-
+    //本节课学生考勤情况
+    _scheduleArray=[[NSMutableArray alloc] initWithArray:[userInfoDic objectForKey:@"教师上课记录"]];
+    _classInfoDic=[[NSMutableDictionary alloc] initWithDictionary:[_scheduleArray objectAtIndex:self.classIndex.intValue]];
+    
+    if([[_classInfoDic objectForKey:@"缺勤情况登记JSON"] isKindOfClass:[NSArray class]])
+        _stuKaoQinArray=[[NSMutableArray alloc] initWithArray:[_classInfoDic objectForKey:@"缺勤情况登记JSON"]];
+    else
+        _stuKaoQinArray=[[NSMutableArray alloc] init];
+    
+    //考勤名称
+    NSString *kaoqinStr=[userInfoDic objectForKey:@"考勤名称"];
+    _kaoqinNameArray=[kaoqinStr componentsSeparatedByString:@","];
+ 
    
-    studentDic=[[NSMutableDictionary alloc] init];
+    
+    NSFileManager *fileManager=[NSFileManager defaultManager];
+    NSArray *documentPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,  NSUserDomainMask,YES);
+    _savePath=[[documentPaths objectAtIndex:0] stringByAppendingString:@"/students/"];
+    BOOL fileExists = [fileManager fileExistsAtPath:_savePath];
+    if(!fileExists)
+        [fileManager createDirectoryAtPath:_savePath withIntermediateDirectories:NO attributes:nil error:nil];
+    
+    _studentDic=[[NSMutableDictionary alloc] init];
+    _headImageDic=[[NSMutableDictionary alloc] init];
+    _requestArray=[[NSMutableArray alloc]init];
     for(int i=0;i<[tmpArray count];i++)
     {
         NSMutableDictionary *student=[[NSMutableDictionary alloc] initWithDictionary:[tmpArray objectAtIndex:i]];
@@ -67,27 +72,117 @@ NSMutableDictionary *stuKaoQinDic; //本班学生本节课缺勤记录
             pinYinResult=[pinYinResult stringByAppendingString:singlePinyinLetter];
         }
         [student setObject:pinYinResult forKey:@"拼音"];
-        if([stuKaoQinDic objectForKey:xuehao]!=nil)
-            [student setObject:[stuKaoQinDic objectForKey:xuehao] forKey:@"考勤"];
-        else
-            [student setObject:[[NSNumber alloc] initWithInt:1] forKey:@"考勤"];
+        [student setObject:[[NSNumber alloc] initWithInt:1] forKey:@"考勤"];
         
+        //判断是否存在学生头像，如果没有则下载
+        
+        NSString *fileName=[NSString stringWithFormat:@"%@%@.jpg",_savePath,xuehao];
+        if([fileManager fileExistsAtPath:fileName])
+        {
+            UIImage *img=[UIImage imageWithContentsOfFile:fileName];
+            img=[img scaleToSize1:CGSizeMake(32, 32)];
+            CGRect newSize=CGRectMake(0, 0,32,32);
+            img=[img cutFromImage:newSize];
+            [_headImageDic setObject:img forKey:xuehao];
+        }
+        else
+        {
+            NSString *urlStr=[student objectForKey:@"头像"];
+            NSURL *url = [NSURL URLWithString:[urlStr URLEncodedString]];
+            ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:url];
+            [_requestArray addObject:request];
+            request.username=xuehao;
+            [request setDelegate:self];
+            [request startAsynchronous];
+            
+        }
+        
+        for(int j=0;j<_stuKaoQinArray.count;j++)
+        {
+            NSDictionary *kaoqinItem=[_stuKaoQinArray objectAtIndex:j];
+            NSString *keyName=[kaoqinItem objectForKey:@"学号"];
+            if([keyName isEqualToString:xuehao])
+            {
+                NSString *kaoqinName=[kaoqinItem objectForKey:@"考勤类型"];
+                NSUInteger index=[_kaoqinNameArray indexOfObject:kaoqinName];
+                if(index==NSNotFound)
+                    index=1;
+                else
+                    index=index+1;
+                
+                [student setObject:[[NSNumber alloc] initWithInt:(int)index] forKey:@"考勤"];
+                break;
+            }
+        }
+       
         NSString *firstLetter=[pinYinResult substringToIndex:1];
-        NSMutableArray *groupArray=[studentDic objectForKey:firstLetter];
+        NSMutableArray *groupArray=[_studentDic objectForKey:firstLetter];
         if(groupArray==nil)
             groupArray=[[NSMutableArray alloc] init];
         [groupArray addObject:student];
-        [studentDic setObject:groupArray forKey:firstLetter];
+        [_studentDic setObject:groupArray forKey:firstLetter];
     }
-    NSArray* tempList  = [studentDic allKeys];
-    sectionArray = [tempList sortedArrayUsingSelector:@selector(compare:)];
+    if(_studentDic.count==0)
+    {
+        OLGhostAlertView *tipView = [[OLGhostAlertView alloc] initWithTitle:@"本班没有学生"];
+        [tipView show];
+        return;
+    }
     
-    self.navigationItem.title=self.banjiName;
-    NSDictionary *kaoqinTongji=[userInfoDic objectForKey:@"学生考勤统计"];
-    kaoqinData=[kaoqinTongji objectForKey:@"出勤率"];
+    NSArray* tempList  = [_studentDic allKeys];
+    _sectionArray = [tempList sortedArrayUsingSelector:@selector(compare:)];
+    
+    _imageSel=[[NSMutableArray alloc] init];
+    [_imageSel addObject:[UIImage imageNamed:@"class_call_attend_sel"]];
+    [_imageSel addObject:[UIImage imageNamed:@"class_call_late_sel"]];
+    [_imageSel addObject:[UIImage imageNamed:@"class_call_leave_sel"]];
+    [_imageSel addObject:[UIImage imageNamed:@"class_call_absence_sel"]];
+    _imageDes=[[NSMutableArray alloc] init];
+    [_imageDes addObject:[UIImage imageNamed:@"class_call_attend_nor"]];
+    [_imageDes addObject:[UIImage imageNamed:@"class_call_late_nor"]];
+    [_imageDes addObject:[UIImage imageNamed:@"class_call_leave_nor"]];
+    [_imageDes addObject:[UIImage imageNamed:@"class_call_absence_nor"]];
+    
+    _imageMan=[UIImage imageNamed:@"defaultPerson"];
+    _imageWoman=[UIImage imageNamed:@"defaultWoman"];
     
 
     
+}
+- (void)dealloc
+{
+    
+    for(ASIHTTPRequest *req in _requestArray)
+    {
+        [req setDownloadProgressDelegate:nil];
+        [req clearDelegatesAndCancel];
+    }
+    [NSObject cancelPreviousPerformRequestsWithTarget:self];
+    [NSThread cancelPreviousPerformRequestsWithTarget:self];
+}
+- (void)requestFinished:(ASIHTTPRequest *)request
+{
+    NSData *datas = [request responseData];
+    UIImage *img=[[UIImage alloc]initWithData:datas];
+    if(img!=nil)
+    {
+        NSString *path=[NSString stringWithFormat:@"%@%@.jpg",_savePath,request.username];
+        [datas writeToFile:path atomically:YES];
+        img=[img scaleToSize1:CGSizeMake(32, 32)];
+        CGRect newSize=CGRectMake(0, 0,32,32);
+        img=[img cutFromImage:newSize];
+        [_headImageDic setObject:img forKey:request.username];
+        [self.tableView reloadData];
+        
+    }
+    if([_requestArray containsObject:request])
+        [_requestArray removeObjectIdenticalTo:request];
+    request=nil;
+}
+-(void)viewDidAppear:(BOOL)animated
+{
+    self.parentViewController.navigationItem.title=self.banjiName;
+    self.parentViewController.navigationItem.rightBarButtonItem =rightBtn;
 }
 
 /*
@@ -102,62 +197,83 @@ NSMutableDictionary *stuKaoQinDic; //本班学生本节课缺勤记录
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
     
-    return [sectionArray count];
+    return [_sectionArray count];
 }
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    NSString *groupName = [sectionArray objectAtIndex:section];
-    NSArray *listTeams = [studentDic objectForKey:groupName];
+    NSString *groupName = [_sectionArray objectAtIndex:section];
+    NSArray *listTeams = [_studentDic objectForKey:groupName];
 	return [listTeams count];
 }
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     UITableViewCell *cell=[tableView dequeueReusableCellWithIdentifier:@"attendCell" forIndexPath:indexPath];
 
+    for(int i=0;i<_kaoqinNameArray.count;i++)
+    {
+        if(i>3) break;
+        UILabel *lable=(UILabel *)[cell viewWithTag:2001+i];
+        [lable setText:[_kaoqinNameArray objectAtIndex:i]];
+        
+    }
+    
     NSUInteger section = [indexPath section];
 	NSUInteger row = [indexPath row];
-    NSString *groupName = [sectionArray objectAtIndex:section];
+    NSString *groupName = [_sectionArray objectAtIndex:section];
 
-	NSMutableArray *listTeams = [studentDic objectForKey:groupName];
+	NSMutableArray *listTeams = [_studentDic objectForKey:groupName];
     
     NSArray *sortDescriptors = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"姓名" ascending:YES]];
     [listTeams sortUsingDescriptors:sortDescriptors];
     
     NSDictionary *student = [listTeams objectAtIndex:row];
 
-    cell.textLabel.text=[student objectForKey:@"姓名"];
+    NSString *stuName=[student objectForKey:@"姓名"];
     NSString *xuehao=[student objectForKey:@"学号"];
     NSString *xingbie=[student objectForKey:@"性别"];
-    NSNumber *kaoqin=[stuKaoQinDic objectForKey:xuehao];
+    NSNumber *kaoqin=[student objectForKey:@"考勤"];;
     int tag=kaoqin.intValue;
-    if(tag>1)
-    {
-        UIButton *btn1=(UIButton *)[cell viewWithTag:1];
-        [btn1 setImage:[UIImage imageNamed:@"class_call_attend_nor"] forState:UIControlStateNormal];
-        UIButton *btn=(UIButton *)[cell viewWithTag:tag];
-        NSString *imagename=nil;
-        if(tag==2)
-            imagename=@"class_call_late_sel";
-        else if(tag==3)
-            imagename=@"class_call_leave_sel";
-        else if(tag==4)
-            imagename=@"class_call_absence_sel";
-        [btn setImage:[UIImage imageNamed:imagename] forState:UIControlStateNormal];
-    }
+    if(tag==0) tag=1;
+    UIButton *btn1=(UIButton *)[cell viewWithTag:1001];
+    UIButton *btn2=(UIButton *)[cell viewWithTag:1002];
+    UIButton *btn3=(UIButton *)[cell viewWithTag:1003];
+    UIButton *btn4=(UIButton *)[cell viewWithTag:1004];
+    
+    [btn1 setImage:[_imageDes objectAtIndex:0]  forState:UIControlStateNormal];
+    [btn2 setImage:[_imageDes objectAtIndex:1]  forState:UIControlStateNormal];
+    [btn3 setImage:[_imageDes objectAtIndex:2]  forState:UIControlStateNormal];
+    [btn4 setImage:[_imageDes objectAtIndex:3]  forState:UIControlStateNormal];
+    
+    UIButton *btnSel=(UIButton *)[cell viewWithTag:1000+tag];
+    [btnSel setImage:[_imageSel objectAtIndex:tag-1]  forState:UIControlStateNormal];
+    
+    UIButton *headBtn=(UIButton *)[cell viewWithTag:11];
+    UILabel *lblname=(UILabel *)[cell viewWithTag:12];
+    lblname.text=stuName;
     if([xingbie isEqualToString:@"女"])
-        cell.imageView.image=[UIImage imageNamed:@"defaultWoman"];
-    cell.detailTextLabel.text=[kaoqinData objectForKey:xuehao];
+        [headBtn setImage:_imageWoman forState:UIControlStateNormal];
+    else
+        [headBtn setImage:_imageMan forState:UIControlStateNormal];
+    UIImage *headImage=[_headImageDic objectForKey:xuehao];
+    if(headImage!=Nil)
+    {
+        
+        [headBtn setImage:headImage forState:UIControlStateNormal];
+        //NSLog(@"%f,%f",headImage.size.width,headImage.size.height);
+        headBtn.imageView.layer.cornerRadius = headImage.size.width / 2;
+        headBtn.imageView.layer.masksToBounds = YES;
+    }
     cell.tag=[xuehao intValue];
     return cell;
 }
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
-	NSString *groupName = [sectionArray objectAtIndex:section];
+	NSString *groupName = [_sectionArray objectAtIndex:section];
 	return groupName;
 }
 -(NSArray *) sectionIndexTitlesForTableView: (UITableView *) tableView
 {
-    return sectionArray;
+    return _sectionArray;
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
 {
@@ -172,12 +288,17 @@ NSMutableDictionary *stuKaoQinDic; //本班学生本节课缺勤记录
     
     UIView *parent=[(UIButton *)sender superview];
     NSArray *controls=[parent subviews];
-    UITableViewCell *cell=(UITableViewCell *)[[parent superview] superview];
+    
+    
+    while(![parent isKindOfClass:[UITableViewCell class]])
+        parent=[parent superview];
+    UITableViewCell *cell=(UITableViewCell *)parent;
+    
     NSIndexPath * indexPath=[self.tableView indexPathForCell:cell];
     NSUInteger section = [indexPath section];
 	NSUInteger row = [indexPath row];
-    NSString *groupName = [sectionArray objectAtIndex:section];
-	NSMutableArray *listTeams = [studentDic objectForKey:groupName];
+    NSString *groupName = [_sectionArray objectAtIndex:section];
+	NSMutableArray *listTeams = [_studentDic objectForKey:groupName];
     NSMutableDictionary *student = [listTeams objectAtIndex:row];
     
     for(int i=0;i<controls.count;i++)
@@ -190,38 +311,33 @@ NSMutableDictionary *stuKaoQinDic; //本班学生本节课缺勤记录
             continue;
         if(btn==sender)
         {
-            if(btn.tag==1)
-                [btn setImage:[UIImage imageNamed:@"class_call_attend_sel"] forState:UIControlStateNormal];
-            else if(btn.tag==2)
-                [btn setImage:[UIImage imageNamed:@"class_call_late_sel"] forState:UIControlStateNormal];
-            else if(btn.tag==3)
-                [btn setImage:[UIImage imageNamed:@"class_call_leave_sel"] forState:UIControlStateNormal];
-            else if(btn.tag==4)
-                [btn setImage:[UIImage imageNamed:@"class_call_absence_sel"] forState:UIControlStateNormal];
-            NSNumber *tag=[[NSNumber alloc] initWithInt:btn.tag];
+            [btn setImage:[_imageSel objectAtIndex:btn.tag-1001]  forState:UIControlStateNormal];
+            NSNumber *tag=[[NSNumber alloc] initWithInt:(int)btn.tag-1000];
             [student setObject:tag forKey:@"考勤"];
         }
         else
         {
-            if(btn.tag==1)
-               [btn setImage:[UIImage imageNamed:@"class_call_attend_nor"] forState:UIControlStateNormal];
-            else if(btn.tag==2)
-               [btn setImage:[UIImage imageNamed:@"class_call_late_nor"] forState:UIControlStateNormal];
-            else if(btn.tag==3)
-                [btn setImage:[UIImage imageNamed:@"class_call_leave_nor"] forState:UIControlStateNormal];
-            else if(btn.tag==4)
-                [btn setImage:[UIImage imageNamed:@"class_call_absence_nor"] forState:UIControlStateNormal];
+            if(btn.tag>1000)
+                [btn setImage:[_imageDes objectAtIndex:btn.tag-1001]  forState:UIControlStateNormal];
         }
     }
 }
 
 -(void) saveAttend
 {
+    if(_studentDic.count==0)
+    {
+        OLGhostAlertView *tipView = [[OLGhostAlertView alloc] initWithTitle:@"本班没有学生"];
+        [tipView show];
+        return;
+    }
+    if(![rightBtn.title isEqualToString:@"保存"])
+        return;
     NSMutableArray *kaoQinArray=[[NSMutableArray alloc] init];
     int iChuqin=0;
-    for(id key in studentDic)
+    for(id key in _studentDic)
     {
-        NSArray *studArray=[studentDic objectForKey:key];
+        NSArray *studArray=[_studentDic objectForKey:key];
         for(int i=0;i<studArray.count;i++)
         {
             NSDictionary *student=[studArray objectAtIndex:i];
@@ -232,24 +348,19 @@ NSMutableDictionary *stuKaoQinDic; //本班学生本节课缺勤记录
         }
     }
     
-    NSURL *url = [NSURL URLWithString:[[kServiceURL stringByAppendingString:@"?action=changekaoqininfo"] URLEncodedString]];
+    NSURL *url = [NSURL URLWithString:[[kServiceURL stringByAppendingString:@"appserver.php?action=changekaoqininfo&APP=IOS"] URLEncodedString]];
     
     NSMutableDictionary *dic=[[NSMutableDictionary alloc] init];
     [dic setObject:kUserIndentify forKey:@"用户较验码"];
     [dic setObject:self.classNo forKey:@"编号"];
-    [dic setObject:[[NSNumber alloc] initWithInt:kaoQinArray.count] forKey:@"班级人数"];
+    [dic setObject:[[NSNumber alloc] initWithInt:(int)kaoQinArray.count] forKey:@"班级人数"];
     [dic setObject:[[NSNumber alloc] initWithInt:iChuqin] forKey:@"实到人数"];
-    /*
-    NSDateFormatter *dateformatter=[[NSDateFormatter alloc] init];
-    [dateformatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
-    NSString * dateStr=[dateformatter stringFromDate:[NSDate date]];
-    [dic setObject:dateStr forKey:@"填写时间"];
-     */
-    [stuKaoQinDic removeAllObjects];
+    
+    [_stuKaoQinArray removeAllObjects];
  
-    for(id key in studentDic)
+    for(id key in _studentDic)
     {
-        NSArray *stuArray=[studentDic objectForKey:key];
+        NSArray *stuArray=[_studentDic objectForKey:key];
         for(int i=0;i<stuArray.count;i++)
         {
             NSDictionary *student=[stuArray objectAtIndex:i];
@@ -257,19 +368,29 @@ NSMutableDictionary *stuKaoQinDic; //本班学生本节课缺勤记录
             if(j.intValue>1)
             {
                 NSString *xuehao=[student objectForKey:@"学号"];
-                [stuKaoQinDic setObject:j forKey:xuehao];
+                NSMutableDictionary *kaoqinItem=[[NSMutableDictionary alloc]init];
+                [kaoqinItem setObject:xuehao forKey:@"学号"];
+                [kaoqinItem setObject:[_kaoqinNameArray objectAtIndex:j.intValue-1] forKey:@"考勤类型"];
+                [_stuKaoQinArray addObject:kaoqinItem];
             }
             
         }
     }
-    [allqueqinDic setObject:stuKaoQinDic forKey:self.classNo];
-    [userInfoDic setObject:allqueqinDic forKey:@"缺勤情况明细"];
+    [_classInfoDic setObject:_stuKaoQinArray forKey:@"缺勤情况登记JSON"];
+    [_scheduleArray setObject:_classInfoDic atIndexedSubscript:self.classIndex.intValue];
+    [userInfoDic setObject:_scheduleArray forKey:@"教师上课记录"];
     
     NSError *error;
-    NSData *kaoqinData=[NSJSONSerialization dataWithJSONObject:stuKaoQinDic options:NSJSONWritingPrettyPrinted error:&error];
-    NSString *kaoqinStr = [[NSString alloc] initWithData:kaoqinData encoding:NSUTF8StringEncoding];
-    [dic setObject:kaoqinStr forKey:@"缺勤情况登记JSON"];
-    NSData *postData=[NSJSONSerialization dataWithJSONObject:dic options:NSJSONWritingPrettyPrinted error:&error];
+    NSMutableDictionary *stuKaoQinDic=[[NSMutableDictionary alloc]init];
+    for(int i=0;i<_stuKaoQinArray.count;i++)
+    {
+        NSDictionary *kaoqinItem=[_stuKaoQinArray objectAtIndex:i];
+        [stuKaoQinDic setObject:[kaoqinItem objectForKey:@"考勤类型"]  forKey:[kaoqinItem objectForKey:@"学号"]];
+    }
+    [dic setObject:stuKaoQinDic forKey:@"缺勤情况登记JSON"];
+    NSMutableArray *dicArray=[[NSMutableArray alloc] init ];
+    [dicArray addObject:dic];
+    NSData *postData=[NSJSONSerialization dataWithJSONObject:dicArray options:NSJSONWritingPrettyPrinted error:&error];
     NSString *postStr = [[NSString alloc] initWithData:postData encoding:NSUTF8StringEncoding];
     
  
@@ -290,7 +411,7 @@ NSMutableDictionary *stuKaoQinDic; //本班学生本节课缺勤记录
     if (connection) {
         _datas = [NSMutableData new];
     }
-    
+    [rightBtn setTitle:@"保存中"];
 }
 
 #pragma mark- NSURLConnection 回调方法
@@ -317,12 +438,40 @@ NSMutableDictionary *stuKaoQinDic; //本班学生本节课缺勤记录
     NSLog(@"%@",result);
     if(range.location!= NSNotFound)
     {
-        [self.parentViewController.navigationItem.rightBarButtonItem setTitle:@"已保存"];
+        result=@"已保存";
+        [rightBtn setTitle:@"保存"];
     }
     else
     {
+        
          NSLog(@"失败，原因：%@",dict);
     }
+    OLGhostAlertView *tipView = [[OLGhostAlertView alloc] initWithTitle:result];
+    [tipView show];
     [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
 }
+
+-(void) prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
+{
+    if([segue.identifier isEqualToString:@"studentInfo"])
+    {
+        UIView *parent=[(UIButton *)sender superview];
+        while(![parent isKindOfClass:[UITableViewCell class]])
+            parent=[parent superview];
+        UITableViewCell *cell=(UITableViewCell *)parent;
+       
+        NSIndexPath * indexPath=[self.tableView indexPathForCell:cell];
+        NSUInteger section = [indexPath section];
+        NSUInteger row = [indexPath row];
+        NSString *groupName = [_sectionArray objectAtIndex:section];
+        NSArray *listTeams = [_studentDic objectForKey:groupName];
+        NSDictionary *student = [listTeams objectAtIndex:row];
+
+        DDIStudentInfo *destController=segue.destinationViewController;
+        destController.student=student;
+        
+    }
+    
+}
+
 @end

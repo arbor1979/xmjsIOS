@@ -1,8 +1,8 @@
 //
 //  main.m
-//  TeacherAssistant
+//  testScrollView1
 //
-//  Created by yons on 13-11-7.
+//  Created by yons on 13-12-3.
 //  Copyright (c) 2013年 dandian. All rights reserved.
 //
 

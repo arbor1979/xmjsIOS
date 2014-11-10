@@ -44,6 +44,7 @@ static const char encodingTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq
         //data = [self DESDecrypt:data WithKey:key];
         //IOS 自带DES加密 End
         return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        
     }
     else {
         return LocalStr_None;
@@ -237,6 +238,162 @@ static const char encodingTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq
     }
     
     return [[NSString alloc] initWithBytesNoCopy:characters length:length encoding:NSASCIIStringEncoding freeWhenDone:YES];
+}
++(NSDate *)todayBegin
+{
+NSCalendar *cal = [NSCalendar currentCalendar];
+NSDateComponents *components = [cal components:( NSHourCalendarUnit | NSMinuteCalendarUnit | NSSecondCalendarUnit ) fromDate:[[NSDate alloc] init]];
+
+[components setHour:-[components hour]];
+[components setMinute:-[components minute]];
+[components setSecond:-[components second]];
+NSDate *today = [cal dateByAddingComponents:components toDate:[[NSDate alloc] init] options:0]; //This variable should now be pointing at a date object that is the start of today (midnight);
+    return today;
+}
++(NSDate *)yesterdayBegin
+{
+    NSCalendar *cal = [NSCalendar currentCalendar];
+    NSDateComponents *components = [cal components:( NSHourCalendarUnit | NSMinuteCalendarUnit | NSSecondCalendarUnit ) fromDate:[[NSDate alloc] init]];
+    [components setHour:-[components hour]-24];
+    [components setMinute:-[components minute]];
+    [components setSecond:-[components second]];
+
+    NSDate *yesterday = [cal dateByAddingComponents:components toDate: [[NSDate alloc] init] options:0];
+    return  yesterday;
+}
++(NSDate *)theDayBeforeYesterdayBegin
+{
+    NSCalendar *cal = [NSCalendar currentCalendar];
+    NSDateComponents *components = [cal components:( NSHourCalendarUnit | NSMinuteCalendarUnit | NSSecondCalendarUnit ) fromDate:[[NSDate alloc] init]];
+    [components setHour:-[components hour]-48];
+    [components setMinute:-[components minute]];
+    [components setSecond:-[components second]];
+    
+    NSDate *yesterday = [cal dateByAddingComponents:components toDate: [[NSDate alloc] init] options:0];
+    return  yesterday;
+}
++(NSDate *)dateFromString:(NSString *)dateString
+{
+    
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    
+    [dateFormatter setDateFormat: @"yyyy-MM-dd HH:mm:ss"];
+ 
+    NSDate *destDate= [dateFormatter dateFromString:dateString];
+    
+    return destDate;
+    
+}
++(NSDate *)dateFromStringShort:(NSString *)dateString
+{
+    
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    
+    [dateFormatter setDateFormat: @"yyyy-MM-dd"];
+    
+    NSDate *destDate= [dateFormatter dateFromString:dateString];
+    
+    return destDate;
+    
+}
++(NSString *)stringFromDate:(NSDate *)date
+{
+    NSDateFormatter *dateformatter=[[NSDateFormatter alloc] init];
+    [dateformatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
+    NSString * dateStr=[dateformatter stringFromDate:date];
+    return dateStr;
+}
++(NSString *)stringFromDateShort:(NSDate *)date
+{
+    NSDateFormatter *dateformatter=[[NSDateFormatter alloc] init];
+    [dateformatter setDateFormat:@"yyyy-MM-dd"];
+    NSString * dateStr=[dateformatter stringFromDate:date];
+    return dateStr;
+}
++(NSString *)getImageSavePath:(NSString *)userName ifexist:(Boolean)ifexist
+{
+    NSString *savePath=@"/";
+    NSFileManager *fileManager=[NSFileManager defaultManager];
+    NSArray *documentPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,  NSUserDomainMask,YES);
+    NSArray *splitArray=[userName componentsSeparatedByString:@"_"];
+    if([[splitArray objectAtIndex:1] isEqualToString:@"老师"])
+        savePath=@"/teachers/";
+    else if([[splitArray objectAtIndex:1] isEqualToString:@"学生"])
+    {
+        savePath=@"/students/";
+        userName=[splitArray objectAtIndex:2];
+    }
+    else if([[splitArray objectAtIndex:1] isEqualToString:@"家长"])
+    {
+        savePath=@"/parents/";
+    }
+    savePath=[[documentPaths objectAtIndex:0] stringByAppendingString:savePath];
+    BOOL fileExists = [fileManager fileExistsAtPath:savePath];
+    if(!fileExists)
+        [fileManager createDirectoryAtPath:savePath withIntermediateDirectories:NO attributes:nil error:nil];
+    NSString *fileName=[NSString stringWithFormat:@"%@%@.jpg",savePath,userName];
+    if(ifexist)
+    {
+        if([fileManager fileExistsAtPath:fileName])
+            return fileName;
+        else
+            return nil;
+    }
+    else
+        return fileName;
+}
++(NSString *)createPath:(NSString *)subdir
+{
+    NSFileManager *fileManager=[NSFileManager defaultManager];
+    NSArray *documentPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,  NSUserDomainMask,YES);
+    NSString *savePath=[[documentPaths objectAtIndex:0] stringByAppendingString:subdir];
+    BOOL fileExists = [fileManager fileExistsAtPath:savePath];
+    if(!fileExists)
+        [fileManager createDirectoryAtPath:savePath withIntermediateDirectories:NO attributes:nil error:nil];
+    return savePath;
+}
++(NSString *)getLinkManPath:(NSString *)userid
+{
+    NSArray *documentPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,  NSUserDomainMask,YES);
+    NSString *savePath=[NSString stringWithFormat:@"%@/%@.plist",[documentPaths objectAtIndex:0],userid];
+    return savePath;
+}
++(BOOL)fileIfExist:(NSString *)filePath
+{
+    NSFileManager *fileManager=[NSFileManager defaultManager];
+    BOOL fileExists = [fileManager fileExistsAtPath:filePath];
+    return fileExists;
+}
++(BOOL)deleteFile:(NSString *)filePath
+{
+    NSFileManager *fileManager=[NSFileManager defaultManager];
+    BOOL fileExists = [fileManager fileExistsAtPath:filePath];
+    if(fileExists)
+    {
+        NSError *err;
+        return [fileManager removeItemAtPath:filePath error:&err];
+    }
+    else
+        return false;
+}
++(BOOL)writeToPlistFile:(NSString*)filename dic:(NSDictionary *)dic
+{
+    NSData * data = [NSKeyedArchiver archivedDataWithRootObject:dic];
+    BOOL didWriteSuccessfull = [data writeToFile:filename atomically:YES];
+    return didWriteSuccessfull;
+}
++(NSDictionary *)readFromPlistFile:(NSString*)filename
+{
+    @try
+    {
+        NSData * data = [NSData dataWithContentsOfFile:filename];
+        return  [NSKeyedUnarchiver unarchiveObjectWithData:data];
+    }
+    @catch(NSException * e)
+    {
+        NSLog(@"Exception: %@", e);
+    }
+    return nil;
 }
 
 @end

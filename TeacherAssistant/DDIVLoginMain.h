@@ -8,9 +8,20 @@
 
 #import <UIKit/UIKit.h>
 #import "NSString+URLEncoding.h"
-
-
-@interface DDIVLoginMain : UIViewController <UITextFieldDelegate,NSURLConnectionDelegate>
+#import "DDIMainMenu.h"
+#import "ASIFormDataRequest.h"
+#import "DDIAppDelegate.h"
+#import "UIImage+Scale.h"
+#import "UIPopoverListView.h"
+#import "DDIDataModel.h"
+#import "UIPopoverListView.h"
+#import "XHDrawerController.h"
+@interface DDIVLoginMain : UIViewController <UITextFieldDelegate,NSURLConnectionDelegate,UIAlertViewDelegate,UIPopoverListViewDelegate,UIPopoverListViewDataSource>
+{
+    NSMutableArray *userListArray;
+    UIPopoverListView *popView;
+    NSUserDefaults *userDefaultes;
+}
 - (IBAction)TestLogin:(id)sender;
 @property (weak, nonatomic) IBOutlet UIImageView *bgImage;
 @property (weak, nonatomic) IBOutlet UIImageView *loginImage;
@@ -19,6 +30,7 @@
 @property (weak, nonatomic) IBOutlet UITextField *passWord;
 @property (weak, nonatomic) IBOutlet UILabel *labelTip;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *indicator;
+@property (weak, nonatomic) IBOutlet UIButton *demoBtn;
 
 //接收从服务器返回数据。
 @property (strong,nonatomic) NSMutableData *datas;
@@ -30,4 +42,5 @@
 -(void) postLogin;
 -(void) postUserInfo;
 -(void)hideTip;
+
 @end

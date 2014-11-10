@@ -33,4 +33,18 @@
  ******************************************************************************/
 + (NSString *)textFromBase64String:(NSString *)base64;
 
++(NSDate *)todayBegin;
++(NSDate *)yesterdayBegin;
++(NSDate *)theDayBeforeYesterdayBegin;
++(NSDate *)dateFromString:(NSString *)dateString;
++(NSString *)stringFromDate:(NSDate *)date;
++(NSDate *)dateFromStringShort:(NSString *)dateString;
++(NSString *)stringFromDateShort:(NSDate *)date;
++(NSString *)getImageSavePath:(NSString *)userName ifexist:(Boolean)ifexist;
++(NSString *)createPath:(NSString *)subdir;
++(NSString *)getLinkManPath:(NSString *)userid;
++(BOOL)fileIfExist:(NSString *)filePath;
++(BOOL)deleteFile:(NSString *)filePath;
++(BOOL)writeToPlistFile:(NSString*)filename dic:(NSDictionary *)dic;
++(NSDictionary *)readFromPlistFile:(NSString*)filename;
 @end
