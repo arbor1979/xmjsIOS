@@ -13,6 +13,7 @@
 #import "LinkMan.h"
 #import "CommonFunc.h"
 #import "News.h"
+#import "AlbumMsg.h"
 @interface DDIDataModel : NSObject
 {
     sqlite3 *db;
@@ -42,4 +43,10 @@
 -(void)clearUnReadByNewsId:(int)newsId;
 -(void)clearUnreadNewsByTypeAndUserId:(NSString *)newsType userId:(NSString *)userId;
 -(void) closeDB;
+-(void)insertNewAubumMsg:(NSDictionary *)dict;
+-(NSInteger)getAlbumUnreadCount:(NSString *)toId;
+-(NSArray *)getAlbumMsgList:(NSString *)toId ifRead:(NSInteger)ifRead;
+-(void)updateUnreadAlbumMsg:(NSArray *)msgList;
+-(void) deleteAllNews;
+-(void) deleteMessageByUserId:(NSString *)respondUser;
 @end

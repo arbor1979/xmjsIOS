@@ -325,7 +325,7 @@
         width=bubbleSize.width+32;
     }
   
-    [lbl setFrame:CGRectMake(cell.frame.size.width-width-cell.avatarImageView.frame.size.width-35, height+cell.scrollView.frame.size.height-34, 34, 18)];
+    [lbl setFrame:CGRectMake(self.view.frame.size.width-width-cell.avatarImageView.frame.size.width-35, height+cell.scrollView.frame.size.height-34, 34, 18)];
     
     int ifsuc=[self.delegate isMessageSuc:indexPath];
     if(!ifsuc)

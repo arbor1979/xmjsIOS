@@ -12,11 +12,12 @@
 #import "ASIFormDataRequest.h"
 #import "DDICourseInfo.h"
 
-@interface DDIClassSchedule : UIViewController<UIPickerViewDataSource,UIPickerViewDelegate>
+@interface DDIClassSchedule : UIViewController<UIPickerViewDataSource,UIPickerViewDelegate,UIAlertViewDelegate>
 {
     NSArray *scheduleArray;
     UIButton *weekSelBtn;
-    UIButton *dropDownArrow;
+    UIButton *weekLastBtn;
+    UIButton *weekNextBtn;
     UIActionSheet *actionSheet;
     UIPickerView *pickerView;
     NSMutableArray *weekArray;
@@ -24,7 +25,17 @@
     OLGhostAlertView *alertTip;
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
     UIAlertController *alertController;
+#else
+    UIViewController *alertController;
 #endif
+    NSUserDefaults *userDefaultes;
+    NSCalendar *calendar;
+    NSInteger unitFlags;
+    NSArray *weekDayArray;
+    NSMutableArray *buttonArray;
+    NSMutableArray *indexStrArray;
+    NSArray *indexArray;
+    UIStackView *myStackView;
 }
 
 @property (weak, nonatomic) IBOutlet UIImageView *bgImage;

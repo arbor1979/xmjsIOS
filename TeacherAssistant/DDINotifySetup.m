@@ -30,8 +30,9 @@
     pickerView.dataSource = self;
     pickerView.showsSelectionIndicator = YES;
     
+    
     UINavigationBar *navBar = [[UINavigationBar alloc] initWithFrame:CGRectMake(0, 0, 320, 40)];
-    UINavigationItem *navItem = [[UINavigationItem alloc] initWithTitle:nil];
+    UINavigationItem *navItem = [[UINavigationItem alloc] initWithTitle:@""];
      UIBarButtonItem *leftButton = [[UIBarButtonItem alloc] initWithTitle:@"取消" style:UIBarButtonItemStyleBordered target:self action:@selector(docancel)];
      navItem.leftBarButtonItem = leftButton;
      UIBarButtonItem *rightButton = [[UIBarButtonItem alloc] initWithTitle:@"确定" style:UIBarButtonItemStyleDone target:self action:@selector(done)];
@@ -44,14 +45,15 @@
     [actionSheet addSubview:pickerView];
     
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
-    
-    
-    alertController = [UIAlertController alertControllerWithTitle:@"\n\n\n\n\n\n\n\n\n\n" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
-    pickerView.frame=CGRectMake(0, 40, alertController.view.bounds.size.width-16, 120);
-    navBar.frame=CGRectMake(0, 0, alertController.view.bounds.size.width-16, 40);
-    
-    [alertController.view addSubview:navBar];
-    [alertController.view addSubview:pickerView];
+    if([[[UIDevice currentDevice]systemVersion] floatValue] >=8.0)
+    {
+        alertController = [UIAlertController alertControllerWithTitle:@"\n\n\n\n\n\n\n\n\n\n" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+        pickerView.frame=CGRectMake(0, 40, alertController.view.bounds.size.width-16, 120);
+        navBar.frame=CGRectMake(0, 0, alertController.view.bounds.size.width-16, 40);
+        
+        [alertController.view addSubview:navBar];
+        [alertController.view addSubview:pickerView];
+    }
     
 #endif
     
@@ -92,15 +94,74 @@
         [defaults setObject:theTime forKey:@"alertTime"];
     }
     [_alertTimeBtn setTitle:theTime forState:UIControlStateNormal];
+    [self.weekBegin addTarget:self action:@selector(changeWeekBegin:) forControlEvents:UIControlEventValueChanged];
+    NSString *weekbegin=[defaults valueForKey:@"weekBegin"];
+    if([weekbegin isEqualToString:@"1"])
+        self.weekBegin.selectedSegmentIndex=0;
+    else
+        self.weekBegin.selectedSegmentIndex=1;
+    [self.bgDefault addTarget:self action:@selector(setBgtoDefault:) forControlEvents:UIControlEventTouchUpInside];
+    [self.bgSelect addTarget:self action:@selector(setBgtoSelect:) forControlEvents:UIControlEventTouchUpInside];
 
 }
-
+-(void)setBgtoDefault:(UIButton *)sender
+{
+    [defaults setObject:@"ScheduleBg" forKey:@"课表背景"];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"changeScheduleBg" object:nil userInfo:nil];
+    alertTip = [[OLGhostAlertView alloc] initWithTitle:@"背景已重置"];
+    [alertTip showInView:self.view];
+}
+-(void)setBgtoSelect:(UIButton *)sender
+{
+    UIImagePickerController *imagePicker = [[UIImagePickerController alloc] init];
+    imagePicker.delegate = self;
+    
+    imagePicker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
+    imagePicker.allowsEditing=false;
+    imagePicker.mediaTypes =  [[NSArray alloc] initWithObjects: (NSString *) kUTTypeImage, nil];
+    [self presentViewController:imagePicker animated:YES completion:nil];
+}
+#pragma mark -
+#pragma UIImagePickerController Delegate
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
+{
+    if ([[info objectForKey:UIImagePickerControllerMediaType] isEqualToString:(NSString*)kUTTypeImage]) {
+        UIImage  *img = [info objectForKey:UIImagePickerControllerOriginalImage];
+        CGSize newsize=[UIScreen mainScreen].bounds.size;
+        img=[img scaleToSize:newsize];
+        NSData *fileData = UIImageJPEGRepresentation(img, 0.6);
+        NSString *savePath=[CommonFunc createPath:@"/"];
+        NSString *path=[savePath stringByAppendingString:@"scheduleBgUser.jpg"];
+        [fileData writeToFile:path atomically:YES];
+        [defaults setObject:path forKey:@"课表背景"];
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"changeScheduleBg" object:nil userInfo:nil];
+        alertTip = [[OLGhostAlertView alloc] initWithTitle:@"背景更换成功"];
+        [alertTip showInView:self.view];
+    }
+    [picker dismissViewControllerAnimated:YES completion:nil];
+    
+}
+-(void) changeWeekBegin:(UISegmentedControl *)seg
+{
+    NSInteger index=seg.selectedSegmentIndex;
+    switch (index) {
+        case 0:
+            [defaults setObject:@"1" forKey:@"weekBegin"];
+            break;
+        case 1:
+            [defaults setObject:@"0" forKey:@"weekBegin"];
+            break;
+        default:
+            break;
+    }
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadSchedule" object:nil userInfo:nil];
+}
 - (void) done{
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
-    [alertController dismissViewControllerAnimated:YES completion:nil];
-#else
-    [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
-#endif
+    if(alertController)
+        [alertController dismissViewControllerAnimated:YES completion:nil];
+    else
+        [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
+
     NSInteger row1 = [pickerView selectedRowInComponent:0];
 	NSInteger row2 = [pickerView selectedRowInComponent:1];
     NSInteger row3 = [pickerView selectedRowInComponent:2];
@@ -118,11 +179,10 @@
 }
 
 - (void) docancel{
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
+if(alertController)
     [alertController dismissViewControllerAnimated:YES completion:nil];
-#else
+else
     [actionSheet dismissWithClickedButtonIndex:1 animated:YES];
-#endif
 
 }
 - (void)didReceiveMemoryWarning
@@ -170,11 +230,11 @@ numberOfRowsInComponent:(NSInteger)component {
     [pickerView selectRow:row2 inComponent:1 animated:NO];
     [pickerView selectRow:row3 inComponent:2 animated:NO];
 
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
-    [self presentViewController:alertController animated:YES completion:nil];
-#else
-    [actionSheet showInView:[UIApplication sharedApplication].keyWindow];
-#endif
+    if(alertController)
+        [self presentViewController:alertController animated:YES completion:nil];
+    else
+        [actionSheet showInView:[UIApplication sharedApplication].keyWindow];
+
 }
 
 - (IBAction)ifPopDayClick:(id)sender {

@@ -15,7 +15,7 @@
 #import "DDINewsDetail.h"
 #import "EGORefreshTableHeaderView.h"
 #import "DDIHelpView.h"
-#import "TQRichTextView.h"
+#import "DDIGifView.h"
 @interface DDINewsTitle : UITableViewController<EGORefreshTableHeaderDelegate,UIActionSheetDelegate>
 {
     NSArray *newsList;
@@ -25,7 +25,7 @@
     BOOL _reloading;
     UIColor *unreadColor;
     BOOL firstLoad;
-
+    DDIGifView *temptitle;
 }
 @property (nonatomic,strong) NSString *newsType;
 @property (nonatomic,strong) NSString *interfaceUrl;

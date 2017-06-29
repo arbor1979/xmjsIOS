@@ -31,7 +31,9 @@ extern NSString *kInitURL;
     self.zuoYeText.layer.borderColor = [UIColor grayColor].CGColor;
     self.zuoYeText.layer.borderWidth =1.0;
     self.zuoYeText.layer.cornerRadius =5.0;
-    
+    self.summaryText.layer.borderColor = [UIColor grayColor].CGColor;
+    self.summaryText.layer.borderWidth =1.0;
+    self.summaryText.layer.cornerRadius =5.0;
     rightBtn= [[UIBarButtonItem alloc] initWithTitle:@"保存" style:UIBarButtonItemStyleBordered target:self action:@selector(savePingJia)];
     
     if(kUserType==1)
@@ -65,6 +67,8 @@ extern NSString *kInitURL;
         
         self.neiRongText.text=[_classInfoDic objectForKey:@"授课内容"];
         self.zuoYeText.text=[_classInfoDic objectForKey:@"作业布置"];
+        self.summaryText.text=[_classInfoDic objectForKey:@"课堂情况简要"];
+        
     }
     else
     {
@@ -77,6 +81,7 @@ extern NSString *kInitURL;
        rightBtn=Nil;
         self.neiRongText.editable=false;
         self.zuoYeText.editable=false;
+        self.summaryText.editable=false;
     }
     //定义一个toolBar
     UIToolbar * topView = [[UIToolbar alloc]initWithFrame:CGRectMake(0, 0, 320, 30)];
@@ -101,22 +106,11 @@ extern NSString *kInitURL;
     
     addPhoto=[UIImage imageNamed:@"addPhoto"];
     
-    if(kUserType==1)
-        parentCell=(UITableViewCell *)[self.neiRongText superview];
-    else
-        parentCell=(UITableViewCell *)[self.zuoYeText superview];
-    while (parentCell)
-    {
-        if([parentCell isKindOfClass:[UITableViewCell class]])
-            break;
-        else
-            parentCell=(UITableViewCell *)[parentCell superview];
-    }
     
     photosArray=[NSMutableArray array];
+    photosArray1=[NSMutableArray array];
+    photosArray2=[NSMutableArray array];
     
-    
-   
     NSFileManager *fileManager=[NSFileManager defaultManager];
     NSArray *documentPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,  NSUserDomainMask,YES);
     savePath=[[documentPaths objectAtIndex:0] stringByAppendingString:@"/classNotes/"];
@@ -126,19 +120,26 @@ extern NSString *kInitURL;
     
  
 }
--(void)drawImageFromArray
+-(void)drawImageFromArray:(NSArray *)photos parent:(UIView *)parent
 {
-    for(int i=0;i<5;i++)
+    for(int i=0;i<10;i++)
     {
-        UIView *subview=[parentCell viewWithTag:100+i];
+        UIView *subview=[parent viewWithTag:100+i];
         if(subview)
            [subview removeFromSuperview];
     }
-    int j=(int)photosArray.count;
+    int j=(int)photos.count;
+    int cols=(self.view.frame.size.width-15)/60;
     for(int i=0;i<j;i++)
     {
-        UIButton *selBtn=[[UIButton alloc]initWithFrame:CGRectMake(15+i*60, 120, 50, 50)];
-        NSDictionary *item=[photosArray objectAtIndex:i];
+        UIButton *selBtn;
+        if(i<=cols-1)
+            selBtn=[[UIButton alloc]initWithFrame:CGRectMake(10+i*60, 120, 50, 50)];
+        else
+        {
+            selBtn=[[UIButton alloc]initWithFrame:CGRectMake(10+(i-cols)*60, 120+60, 50, 50)];
+        }
+        NSMutableDictionary *item=[NSMutableDictionary dictionaryWithDictionary:[photos objectAtIndex:i]];
         NSString *filename=[item objectForKey:@"文件名"];
         filename=[savePath stringByAppendingString:filename];
         if([CommonFunc fileIfExist:filename])
@@ -152,6 +153,7 @@ extern NSString *kInitURL;
             NSURL *url = [NSURL URLWithString:urlStr];
             ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:url];
             request.username=@"下载图片";
+            [item setObject:selBtn forKey:@"curBtn"];
             request.userInfo=item;
             request.tag=100+i;
             UIActivityIndicatorView *aiv=[[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(10, 10, 30, 30)];
@@ -169,11 +171,15 @@ extern NSString *kInitURL;
         selBtn.layer.borderColor = [UIColor grayColor].CGColor;
         selBtn.layer.borderWidth =1.0;
         [selBtn addTarget:self action:@selector(addPhotoClick:) forControlEvents:UIControlEventTouchUpInside];
-        [parentCell addSubview:selBtn];
+        [parent addSubview:selBtn];
     }
-    if(j<5 && kUserType!=3)
+    if(j<10 && kUserType!=3)
     {
-        UIButton *selBtn=[[UIButton alloc]initWithFrame:CGRectMake(15+j*60, 120, 50, 50)];
+        UIButton *selBtn;
+        if(j<cols)
+            selBtn=[[UIButton alloc]initWithFrame:CGRectMake(10+j*60, 120, 50, 50)];
+        else
+            selBtn=[[UIButton alloc]initWithFrame:CGRectMake(10+(j-cols)*60, 180, 50, 50)];
         [selBtn setImage:addPhoto forState:UIControlStateNormal];
         selBtn.tag=100+j;
         [selBtn.layer setMasksToBounds:YES];
@@ -181,24 +187,61 @@ extern NSString *kInitURL;
         selBtn.layer.borderColor = [UIColor grayColor].CGColor;
         selBtn.layer.borderWidth =1.0;
         [selBtn addTarget:self action:@selector(addPhotoClick:) forControlEvents:UIControlEventTouchUpInside];
-        [parentCell addSubview:selBtn];
+        [parent addSubview:selBtn];
     }
+    [self.tableView reloadData];
     
 }
 -(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     CGFloat height=[super tableView:tableView heightForRowAtIndexPath:indexPath];
-    if(indexPath.section==4 && kUserType==1)
-        return 180;
+    int j=(int)photosArray.count;
+    int m=(int)photosArray1.count;
+    int n=(int)photosArray2.count;
+    int cols=(self.view.frame.size.width-20)/60;
+    if(kUserType==1)
+    {
+        if(indexPath.section==4)
+        {
+            if(cols<j)
+                return 240;
+            else
+                return 180;
+        }
+        else if(indexPath.section==5)
+        {
+            if(cols<m)
+                return 240;
+            else
+                return 180;
+        }
+        else if(indexPath.section==6)
+        {
+            if(cols<n)
+                return 240;
+            else
+                return 180;
+        }
+        return height;
+    }
     else if (indexPath.section==5 && kUserType!=1)
     {
-        return 180;
+        if(cols<m)
+            return 240;
+        else
+            return 180;
     }
     else
         return height;
 }
 -(void)addPhotoClick:(UIButton *)sender
 {
+    if([sender.superview isEqual:_neiRongText.superview])
+        curIndex=1;
+    else if([sender.superview isEqual:_zuoYeText.superview])
+        curIndex=2;
+    else if([sender.superview isEqual:_summaryText.superview])
+        curIndex=3;
     if([sender.imageView.image isEqual:addPhoto])
     {
         UIActionSheet* actionSheet = [[UIActionSheet alloc]
@@ -230,14 +273,20 @@ extern NSString *kInitURL;
     }
     
 }
--(void)popPhotoView:(NSNumber *)index
+-(void)popPhotoView:(NSNumber *)index;
 {
-  
+    NSArray *photos;
+    if(curIndex==1)
+        photos=photosArray;
+    else if(curIndex==2)
+        photos=photosArray1;
+    else if(curIndex==3)
+        photos=photosArray2;
     DDIPictureBrows *browserView = [[DDIPictureBrows alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     NSMutableArray *picArray=[NSMutableArray array];
-    for(int i=0;i<photosArray.count;i++)
+    for(int i=0;i<photos.count;i++)
     {
-        NSDictionary *item=[photosArray objectAtIndex:i];
+        NSDictionary *item=[photos objectAtIndex:i];
         NSString *filename=[item objectForKey:@"文件名"];
         filename=[savePath stringByAppendingString:filename];
         if([CommonFunc fileIfExist:filename])
@@ -291,7 +340,13 @@ extern NSString *kInitURL;
         switch (buttonIndex) {
             case 0://删除
             {
-                NSDictionary *item=[photosArray objectAtIndex:actionSheet.tag-100];
+                NSDictionary *item;
+                if(curIndex==1)
+                    item=[photosArray objectAtIndex:actionSheet.tag-100];
+                else if(curIndex==2)
+                    item=[photosArray1 objectAtIndex:actionSheet.tag-100];
+                else if(curIndex==3)
+                    item=[photosArray2 objectAtIndex:actionSheet.tag-100];
                 [self deleteRemoteFile:item];
             }
                 break;
@@ -313,9 +368,18 @@ extern NSString *kInitURL;
     [dic setObject:kUserIndentify forKey:@"用户较验码"];
     NSNumber *timeStamp=[[NSNumber alloc] initWithLong:[[NSDate new] timeIntervalSince1970]];
     [dic setObject:timeStamp forKey:@"DATETIME"];
-    [dic setObject:@"课堂笔记" forKey:@"图片类别"];
+    if(kUserType==1)
+    {
+        if(curIndex==1)
+            [dic setObject:@"课堂笔记" forKey:@"图片类别"];
+        else if(curIndex==2)
+            [dic setObject:@"课堂作业" forKey:@"图片类别"];
+        else if(curIndex==3)
+            [dic setObject:@"课堂情况" forKey:@"图片类别"];
+    }
+    else
+            [dic setObject:@"课堂笔记" forKey:@"图片类别"];
     [dic setObject:filename forKey:@"课件名称"];
-    
     NSURL *url = [NSURL URLWithString:[[kInitURL stringByAppendingString:@"KeJianDelete.php"] URLEncodedString]];
     ASIFormDataRequest *request = [ASIFormDataRequest requestWithURL:url];
     NSError *error;
@@ -365,7 +429,36 @@ extern NSString *kInitURL;
     [request setPostValue:kUserIndentify forKey:@"用户较验码"];
     [request setPostValue:self.className forKey:@"课程名称"];
     [request setPostValue:self.classNo forKey:@"老师上课记录编号"];
-    [request setPostValue:@"课堂笔记" forKey:@"图片类别"];
+    UIView *parent;
+    int addBtnTag;
+    if(kUserType==1)
+    {
+        if(curIndex==1)
+        {
+            [request setPostValue:@"课堂笔记" forKey:@"图片类别"];
+            parent=_neiRongText.superview;
+            addBtnTag=(int)photosArray.count+100;
+        }
+        else if(curIndex==2)
+        {
+            [request setPostValue:@"课堂作业" forKey:@"图片类别"];
+            parent=_zuoYeText.superview;
+            addBtnTag=(int)photosArray1.count+100;
+        }
+        else
+        {
+            [request setPostValue:@"课堂情况" forKey:@"图片类别"];
+            parent=_summaryText.superview;
+            addBtnTag=(int)photosArray2.count+100;
+        }
+        
+    }
+    else
+    {
+        [request setPostValue:@"课堂笔记" forKey:@"图片类别"];
+        parent=_zuoYeText.superview;
+        addBtnTag=(int)photosArray1.count+100;
+    }
     [request setDelegate:self];
     NSDictionary *dic=[NSDictionary dictionaryWithObject:data forKey:@"data"];
     request.username=@"上传课堂笔记";
@@ -375,7 +468,8 @@ extern NSString *kInitURL;
     request.timeOutSeconds=300;
     [request startAsynchronous];
     [requestArray addObject:request];
-    UIButton *btn=(UIButton *)[parentCell viewWithTag:photosArray.count+100];
+
+    UIButton *btn=(UIButton *)[parent viewWithTag:addBtnTag];
     if(btn)
     {
         if(rpv)
@@ -444,7 +538,7 @@ extern NSString *kInitURL;
     }
     else
     {
-        if(section==0 || section==1)
+        if(section==0 || section==1 || section==6)
             return 0;
     }
     return [super tableView:tableView numberOfRowsInSection:section];
@@ -458,7 +552,7 @@ extern NSString *kInitURL;
     }
     else
     {
-        if(section==0 || section==1)
+        if(section==0 || section==1 || section==6)
             return 0;
     }
     return [super tableView:tableView heightForHeaderInSection:section];
@@ -614,7 +708,7 @@ extern NSString *kInitURL;
         [dic setObject:[_dengjiArray objectAtIndex:iWeiShengIndex]  forKey:@"教室卫生"];
         [dic setObject:self.neiRongText.text  forKey:@"授课内容"];
         [dic setObject:self.zuoYeText.text  forKey:@"作业布置"];
-        
+        [dic setObject:self.summaryText.text  forKey:@"课堂情况简要"];
         NSURL *url = [NSURL URLWithString:[[kServiceURL stringByAppendingString:@"appserver.php?action=changezongjieinfo"] URLEncodedString]];
         ASIFormDataRequest *request = [ASIFormDataRequest requestWithURL:url];
         NSError *error;
@@ -700,9 +794,39 @@ extern NSString *kInitURL;
                     _zuoYeText.text=[dict objectForKey:@"课堂笔记"];
                 
             }
+            photosArray1=[[NSMutableArray alloc] initWithArray:[dict objectForKey:@"课堂笔记图片"]];
+            [self drawImageFromArray:photosArray1 parent:_zuoYeText.superview];
+                   }
+        else
+        {
+            photosArray=[[NSMutableArray alloc] initWithArray:[dict objectForKey:@"课堂笔记图片"]];
+            photosArray1=[[NSMutableArray alloc] initWithArray:[dict objectForKey:@"课堂作业图片"]];
+            photosArray2=[[NSMutableArray alloc] initWithArray:[dict objectForKey:@"课堂情况图片"]];
+            [self drawImageFromArray:photosArray parent:_neiRongText.superview];
+            [self drawImageFromArray:photosArray1 parent:_zuoYeText.superview];
+            [self drawImageFromArray:photosArray2 parent:_summaryText.superview];
+            
+            NSString *beginStr=[_classInfoDic objectForKey:@"应该填写时间"];
+            NSString *endStr=[_classInfoDic objectForKey:@"最迟填写时间"];
+            NSDate *beginDate=[CommonFunc dateFromStringShort:beginStr];
+            NSDate *endDate=[CommonFunc dateFromStringShort:endStr];
+            NSDate *now=[NSDate date];
+            if([beginDate compare:now]==NSOrderedAscending && [endDate compare:now]==NSOrderedDescending)
+            {
+                
+            }
+            else
+            {
+                NSString *message=[NSString stringWithFormat:@"请在 %@ 至 %@ 之间填写",beginStr,endStr];
+                alertTip = [[OLGhostAlertView alloc] initWithTitle:message message:nil];
+                [alertTip showInView:self.view];
+                _neiRongText.editable=false;
+                _zuoYeText.editable=false;
+                _summaryText.editable=false;
+                self.parentViewController.navigationItem.rightBarButtonItem =nil;
+            }
         }
-        photosArray=[[NSMutableArray alloc] initWithArray:[dict objectForKey:@"课堂笔记图片"]];
-        [self drawImageFromArray];
+        
 
     }
     else if([request.username isEqualToString:@"保存数据"])
@@ -726,6 +850,7 @@ extern NSString *kInitURL;
                 [_classInfoDic setObject:[_dengjiArray objectAtIndex:iWeiShengIndex]  forKey:@"教室卫生"];
                 [_classInfoDic setObject:self.neiRongText.text  forKey:@"授课内容"];
                 [_classInfoDic setObject:self.zuoYeText.text  forKey:@"作业布置"];
+                [_classInfoDic setObject:self.summaryText.text  forKey:@"课堂情况简要"];
                 [_scheduleArray setObject:_classInfoDic atIndexedSubscript:self.classIndex.intValue];
                 [userInfoDic setObject:_scheduleArray forKey:@"教师上课记录"];
                 result=@"已保存";
@@ -764,8 +889,21 @@ extern NSString *kInitURL;
             NSString *filename=[dict objectForKey:@"文件名"];
             filename=[savePath stringByAppendingString:filename];
             [data writeToFile:filename atomically:YES];
-            [photosArray addObject:dict];
-            [self drawImageFromArray];
+            if(curIndex==1)
+            {
+                [photosArray addObject:dict];
+                [self drawImageFromArray:photosArray parent:_neiRongText.superview];
+            }
+            else if(curIndex==2)
+            {
+                [photosArray1 addObject:dict];
+                [self drawImageFromArray:photosArray1 parent:_zuoYeText.superview];
+            }
+            else
+            {
+                [photosArray2 addObject:dict];
+                [self drawImageFromArray:photosArray2 parent:_summaryText.superview];
+            }
         }
     }
     if([request.username isEqualToString:@"下载图片"])
@@ -776,7 +914,7 @@ extern NSString *kInitURL;
         NSString *filename=[item objectForKey:@"文件名"];
         filename=[savePath stringByAppendingString:filename];
         [datas writeToFile:filename atomically:YES];
-        UIButton *btn=(UIButton *)[parentCell viewWithTag:request.tag];
+        UIButton *btn=(UIButton *)[item objectForKey:@"curBtn"];
         for(UIActivityIndicatorView *v in btn.subviews)
         {
             if([v isKindOfClass:[UIActivityIndicatorView class]])
@@ -793,8 +931,22 @@ extern NSString *kInitURL;
         NSString *filename=[dict objectForKey:@"文件名"];
         filename=[savePath stringByAppendingString:filename];
         [CommonFunc deleteFile:filename];
-        [photosArray removeObject:dict];
-        [self drawImageFromArray];
+        if(curIndex==1)
+        {
+            [photosArray removeObject:dict];
+            [self drawImageFromArray:photosArray parent:_neiRongText.superview];
+        }
+        else if(curIndex==2)
+        {
+            [photosArray1 removeObject:dict];
+            [self drawImageFromArray:photosArray1 parent:_zuoYeText.superview];
+        }
+        else
+        {
+            [photosArray2 removeObject:dict];
+            [self drawImageFromArray:photosArray2 parent:_summaryText.superview];
+        }
+        
     }
 }
 - (void)requestFailed:(ASIHTTPRequest *)request

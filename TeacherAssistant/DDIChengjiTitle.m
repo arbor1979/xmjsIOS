@@ -24,8 +24,9 @@ extern NSString *kUserIndentify;//用户登录后的唯一识别码
     savePath=[CommonFunc createPath:@"/utils/"];
     requestArray=[NSMutableArray array];
     titleArray= [NSArray array];
+    emptyPhoto=[UIImage imageNamed:@"empty_photo"];
     self.tableView.backgroundColor=[UIColor colorWithRed:228/255.0 green:244/255.0 blue:234/255.0 alpha:1];
-    mygreen=[UIColor colorWithRed:39/255.0 green:174/255.0 blue:98/255.0 alpha:0.8];
+    mygreen=[UIColor colorWithRed:39/255.0 green:174/255.0 blue:98/255.0 alpha:1.0f];
     [self loadTitleData];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(loadTitleData)
@@ -51,7 +52,7 @@ extern NSString *kUserIndentify;//用户登录后的唯一识别码
 -(void)loadTitleData
 {
     NSString *urlStr=[NSString stringWithFormat:@"%@InterfaceStudent/%@",kInitURL,self.interfaceUrl];
-    NSURL *url = [NSURL URLWithString:urlStr];
+    NSURL *url = [NSURL URLWithString:[urlStr URLEncodedString]];
     ASIFormDataRequest *request = [ASIFormDataRequest requestWithURL:url];
     NSError *error;
     NSMutableDictionary *dic=[[NSMutableDictionary alloc] init ];
@@ -82,7 +83,10 @@ extern NSString *kUserIndentify;//用户登录后的唯一识别码
         data   = [[NSData alloc] initWithBase64Encoding:dataStr];
         NSDictionary *dict= [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments error:nil];
         if(dict)
-            titleArray=[dict objectForKey:@"成绩数值"];
+        {
+            if(![[dict objectForKey:@"成绩数值"] isEqual:[NSNull null]])
+                titleArray=[dict objectForKey:@"成绩数值"];
+        }
         if(!dict || !titleArray || titleArray.count==0)
         {
             OLGhostAlertView *tipView = [[OLGhostAlertView alloc] initWithTitle:@"没有任何数据"];
@@ -95,9 +99,35 @@ extern NSString *kUserIndentify;//用户登录后的唯一识别码
         {
             
             btnUrl=[dict objectForKey:@"右上按钮URL"];
+            btnSubmit=[dict objectForKey:@"右上按钮Submit"];
+            if(btnSubmit==nil || btnSubmit.length==0)
+                btnSubmit=@"否";
             UIBarButtonItem *rightBtn= [[UIBarButtonItem alloc] initWithTitle:btName style:UIBarButtonItemStyleBordered target:self action:@selector(addNew)];
             
             self.navigationItem.rightBarButtonItem=rightBtn;
+        }
+    }
+    else if([request.username isEqualToString:@"右上按钮提交"])
+    {
+        NSData *data = [request responseData];
+        NSString* dataStr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        data   = [[NSData alloc] initWithBase64Encoding:dataStr];
+        NSDictionary *dict= [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments error:nil];
+        if(dict && [[dict objectForKey:@"结果"] isEqualToString:@"成功"])
+        {
+            OLGhostAlertView *tipView = [[OLGhostAlertView alloc] initWithTitle:@"操作成功"];
+            [tipView showInView:self.view];
+            NSString *autoClose=[dict objectForKey:@"自动关闭"];
+            if([autoClose isEqualToString:@"是"])
+            {
+                [self.navigationController popViewControllerAnimated:YES];
+                [[NSNotificationCenter defaultCenter] postNotificationName:@"needRefreshTitle" object:nil];
+            }
+            else
+            {
+                [self loadTitleData];
+                [[NSNotificationCenter defaultCenter] postNotificationName:@"needRefreshTitle" object:nil];
+            }
         }
     }
     else if([request.username isEqualToString:@"下载图片"])
@@ -109,26 +139,17 @@ extern NSString *kUserIndentify;//用户登录后的唯一识别码
             NSDictionary *indexDic=request.userInfo;
             NSString *filename=[indexDic objectForKey:@"filename"];
             [datas writeToFile:filename atomically:YES];
-            UIView *parent=[indexDic objectForKey:@"parentView"];
+            //UIView *parent=[indexDic objectForKey:@"parentView"];
             NSIndexPath *indexPath=[indexDic objectForKey:@"indexPath"];
             headImage=[headImage scaleToSize:CGSizeMake(42, 42)];
-            if([parent isKindOfClass:[UIButton class]])
-            {
-                UIButton *btn=(UIButton *)parent;
-                [btn setBackgroundImage:headImage forState:UIControlStateNormal];
-            }
-            else if([parent isKindOfClass:[UIImageView class]])
-            {
-                UIImageView *iv=(UIImageView *)parent;
-                iv.image=headImage;
-            }
-            
+            /*
             UIActivityIndicatorView *aiv=[indexDic objectForKey:@"aiv"];
             if(aiv)
             {
                 [aiv stopAnimating];
                 [aiv removeFromSuperview];
             }
+            */
             [self.tableView reloadRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
             
         }
@@ -143,14 +164,35 @@ extern NSString *kUserIndentify;//用户登录后的唯一识别码
     NSString *urlStr=[NSString stringWithFormat:@"%@InterfaceStudent/%@",kInitURL,self.interfaceUrl];
     NSArray *tmparray=[urlStr componentsSeparatedByString:@"?"];
     urlStr=[[tmparray objectAtIndex:0] stringByAppendingString:btnUrl];
-    DDIWenJuanDetail *detail=[self.storyboard instantiateViewControllerWithIdentifier:@"wenjuanDetail"];
-    
-    detail.title=self.title;
-    detail.interfaceUrl=urlStr;
-    detail.examStatus=@"进行中";
-    detail.key=-1;
-    detail.parentTitleArray=nil;
-    [self.navigationController pushViewController:detail animated:YES];
+    if(btnSubmit!=nil && [btnSubmit isEqualToString:@"是"])
+    {
+        NSURL *url = [NSURL URLWithString:[urlStr URLEncodedString]];
+        ASIFormDataRequest *request = [ASIFormDataRequest requestWithURL:url];
+        NSError *error;
+        NSMutableDictionary *dic=[[NSMutableDictionary alloc] init ];
+        [dic setObject:kUserIndentify forKey:@"用户较验码"];
+        NSNumber *timeStamp=[[NSNumber alloc] initWithLong:[[NSDate new] timeIntervalSince1970]];
+        [dic setObject:timeStamp forKey:@"DATETIME"];
+        request.username=@"右上按钮提交";
+        NSData *postData=[NSJSONSerialization dataWithJSONObject:dic options:NSJSONWritingPrettyPrinted error:&error];
+        NSString *postStr = [[NSString alloc] initWithData:postData encoding:NSUTF8StringEncoding];
+        postStr=[GTMBase64 base64StringBystring:postStr];
+        [request setPostValue:postStr forKey:@"DATA"];
+        [request setDelegate:self];
+        [request startAsynchronous];
+        [requestArray addObject:request];
+    }
+    else
+    {
+        DDIWenJuanDetail *detail=[self.storyboard instantiateViewControllerWithIdentifier:@"wenjuanDetail"];
+        detail.title=self.title;
+        detail.interfaceUrl=urlStr;
+        detail.examStatus=@"进行中";
+        detail.key=-1;
+        detail.parentTitleArray=nil;
+        detail.autoClose=@"是";
+        [self.navigationController pushViewController:detail animated:YES];
+    }
 }
 
 - (void)requestFailed:(ASIHTTPRequest *)request
@@ -159,8 +201,28 @@ extern NSString *kUserIndentify;//用户登录后的唯一识别码
         [alertTip removeFromSuperview];
     NSError *error = [request error];
     NSLog(@"请求失败:%@",[error localizedDescription]);
-    OLGhostAlertView *tipView = [[OLGhostAlertView alloc] initWithTitle:[error localizedDescription]];
-    [tipView show];
+    if([request.username isEqualToString:@"下载图片"])
+    {
+        NSDictionary *dic=request.userInfo;
+        UIActivityIndicatorView *aiv=[dic objectForKey:@"aiv"];
+        if(aiv)
+        {
+            UIView *view=aiv.superview;
+            if([view isKindOfClass:[UIImageView class]])
+            {
+                UIImageView *parent=(UIImageView *)view;
+                parent.image=emptyPhoto;
+                
+            }
+            [aiv removeFromSuperview];
+        }
+        
+    }
+    else
+    {
+        OLGhostAlertView *tipView = [[OLGhostAlertView alloc] initWithTitle:[error localizedDescription]];
+        [tipView show];
+    }
 }
 
 #pragma mark - Table view data source
@@ -186,11 +248,36 @@ extern NSString *kUserIndentify;//用户登录后的唯一识别码
     
     NSDictionary *item=[titleArray objectAtIndex:indexPath.row];
     NSString *titleImage=[item objectForKey:@"图标"];
+    cell.imageView.image=nil;
+    for(UIView *subview in cell.imageView.subviews)
+        [subview removeFromSuperview];
     [self loadImageAndSave:titleImage parentView:cell.imageView indexPath:indexPath];
     
     cell.textLabel.text=[item objectForKey:@"第一行"];
     cell.detailTextLabel.layer.cornerRadius =5.0;
     cell.detailTextLabel.backgroundColor=mygreen;
+    cell.detailTextLabel.textColor=[UIColor whiteColor];
+    NSString *theColor=[item objectForKey:@"颜色"];
+    if(theColor!=nil)
+    {
+        if([theColor isEqualToString:@"red"])
+        {
+            cell.detailTextLabel.backgroundColor=[UIColor colorWithRed:175/255.0f green:40/255.0f blue:49/255.0f alpha:1.0f];
+        }
+        else if([theColor isEqualToString:@"blue"])
+        {
+            cell.detailTextLabel.backgroundColor=[UIColor colorWithRed:40/255.0f green:49/255.0f blue:175/255.0f alpha:1.0f];
+        }
+        else if([theColor isEqualToString:@"brown"])
+        {
+            cell.detailTextLabel.backgroundColor=[UIColor colorWithRed:175/255.0f green:98/255.0f blue:40/255.0f alpha:1.0f];
+        }
+        else if([theColor isEqualToString:@"pink"])
+        {
+            cell.detailTextLabel.backgroundColor=[UIColor colorWithRed:212/255.0f green:64/255.0f blue:148/255.0f alpha:1.0f];
+        }
+    }
+        
     
     cell.detailTextLabel.text=[NSString stringWithFormat:@" %@ ",[item objectForKey:@"第二行左"]];
     UILabel *rightLbl=(UILabel *)[cell viewWithTag:101];
@@ -230,20 +317,29 @@ extern NSString *kUserIndentify;//用户登录后的唯一识别码
         }
         else
         {
+            /*
             UIActivityIndicatorView *aiv=[[UIActivityIndicatorView alloc]initWithFrame:CGRectMake(parentView.bounds.size.width/2-16, parentView.bounds.size.height/2-16, 32, 32)];
             aiv.activityIndicatorViewStyle=UIActivityIndicatorViewStyleGray;
             [parentView addSubview:aiv];
             [aiv startAnimating];
-            
+            */
             NSURL *url = [NSURL URLWithString:imageUrl];
+            /*
+            for(ASIHTTPRequest *item in requestArray)
+            {
+                if([item.url isEqual:url])
+                    return;
+            }
+            */
             ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:url];
             request.username=@"下载图片";
             NSMutableDictionary *indexDic=[[NSMutableDictionary alloc]init];
             [indexDic setObject:filename forKey:@"filename"];
-            [indexDic setObject:aiv forKey:@"aiv"];
-            [indexDic setObject:parentView forKey:@"parentView"];
+            //[indexDic setObject:aiv forKey:@"aiv"];
+            //[indexDic setObject:parentView forKey:@"parentView"];
             [indexDic setObject:indexPath forKey:@"indexPath"];
             request.userInfo=indexDic;
+            request.timeOutSeconds=10;
             [request setDelegate:self];
             [request startAsynchronous];
             [requestArray addObject:request];
@@ -255,8 +351,51 @@ extern NSString *kUserIndentify;//用户登录后的唯一识别码
 {
     NSDictionary *item=[titleArray objectAtIndex:indexPath.row];
     NSString *detailURL=[item objectForKey:@"内容项URL"];
+    NSString *moban=[item objectForKey:@"模板"];
+    NSString *mobanLevel=[item objectForKey:@"模板级别"];
     if(detailURL && detailURL.length>0)
-        [self performSegueWithIdentifier:@"chengjiDetail" sender:indexPath];
+    {
+        if(!moban)
+            moban=@"成绩";
+        if([moban isEqualToString:@"成绩"])
+        {
+            if([mobanLevel isEqualToString:@"main"])
+            {
+                DDIChengjiTitle *chengjiMain=[self.storyboard instantiateViewControllerWithIdentifier:@"chengjiMain"];
+                chengjiMain.title=self.title;
+                NSArray *tmparray=[self.interfaceUrl componentsSeparatedByString:@"?"];
+                NSString *realname=[CommonFunc getFileRealName:[tmparray objectAtIndex:0]];
+                detailURL=[NSString stringWithFormat:@"%@%@",realname,detailURL];
+                chengjiMain.interfaceUrl=detailURL;
+                [self.navigationController pushViewController:chengjiMain animated:YES];
+            }
+            else
+              [self performSegueWithIdentifier:@"chengjiDetail" sender:indexPath];
+        }
+        else if([moban isEqualToString:@"调查问卷"])
+        {
+            NSArray *tmparray=[self.interfaceUrl componentsSeparatedByString:@"?"];
+            NSString *realname=[CommonFunc getFileRealName:[tmparray objectAtIndex:0]];
+            detailURL=[NSString stringWithFormat:@"%@%@",realname,detailURL];
+            if([mobanLevel isEqualToString:@"main"])
+            {
+                DDIWenJuanTitle *chengjiMain=[self.storyboard instantiateViewControllerWithIdentifier:@"wenjuanMain"];
+                chengjiMain.title=self.title;
+                chengjiMain.interfaceUrl=detailURL;
+                [self.navigationController pushViewController:chengjiMain animated:YES];
+            }
+            else
+            {
+                DDIWenJuanDetail *chengjiMain=[self.storyboard instantiateViewControllerWithIdentifier:@"wenjuanDetail"];
+                chengjiMain.title=self.title;
+                NSString *urlStr=[NSString stringWithFormat:@"%@InterfaceStudent/%@",kInitURL,detailURL];
+                chengjiMain.interfaceUrl=urlStr;
+                [self.navigationController pushViewController:chengjiMain animated:YES];
+            }
+        }
+            
+
+    }
     
     
 }
@@ -266,8 +405,8 @@ extern NSString *kUserIndentify;//用户登录后的唯一识别码
     NSDictionary *item=[titleArray objectAtIndex:indexPath.row];
     NSString *detailURL=[item objectForKey:@"内容项URL"];
     NSString *urlStr=[NSString stringWithFormat:@"%@InterfaceStudent/%@",kInitURL,self.interfaceUrl];
-    urlStr=[urlStr stringByAppendingString:detailURL];
-
+    NSArray *tmparray=[urlStr componentsSeparatedByString:@"?"];
+    urlStr=[[tmparray objectAtIndex:0] stringByAppendingString:detailURL];
     DDIChengjiDetail *detial=segue.destinationViewController;
     detial.title=[item objectForKey:@"第一行"];
     detial.interfaceUrl=urlStr;

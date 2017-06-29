@@ -47,12 +47,10 @@ extern NSDictionary *LinkMandic;
 -(void)viewWillAppear:(BOOL)animated
 {
     self.navigationItem.title=@"选择联系人";
+    [super viewWillAppear:animated];
     
 }
--(void)viewDidAppear:(BOOL)animated
-{
-    
-}
+
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     static NSString *cellIdentifier = @"TQMultistageTableViewCell";
@@ -67,6 +65,8 @@ extern NSDictionary *LinkMandic;
         
         [action addTarget:self action:@selector(detailButtonClicked:) forControlEvents:UIControlEventTouchUpInside];
          cell.accessoryView=action;
+        
+        
         [cell.imageView.layer setMasksToBounds:YES];
         [cell.imageView.layer setCornerRadius:5.0];
         
@@ -87,7 +87,8 @@ extern NSDictionary *LinkMandic;
     NSString *picUrl=[linkman objectForKey:@"用户头像"];
  
     cell.textLabel.text=userName;
-    UIImage *img=[self->imageArray objectForKey:userid];
+
+    UIImage *img;
     if (img==Nil)
     {
         NSString *userPic=[CommonFunc getImageSavePath:userid ifexist:YES];
@@ -98,7 +99,6 @@ extern NSDictionary *LinkMandic;
             CGSize newSize=CGSizeMake(40, 40);
             headImage=[headImage scaleToSize1:newSize];
             headImage=[headImage cutFromImage:CGRectMake(0, 0, 40, 40)];
-            [imageArray setObject:headImage forKey:userid];
             cell.imageView.image=headImage;
         }
         else
@@ -248,7 +248,7 @@ extern NSDictionary *LinkMandic;
         [imgv.layer setMasksToBounds:YES];
         [imgv.layer setCornerRadius:5.0];
         NSString *userid=[selectedArray objectAtIndex:i];
-        UIImage *img=[self->imageArray objectForKey:userid];
+        UIImage *img;
         if(!img)
         {
             NSString *userPic=[CommonFunc getImageSavePath:userid ifexist:YES];
@@ -304,11 +304,12 @@ extern NSDictionary *LinkMandic;
                  NSDictionary *linkman=[allLinkManArray objectAtIndex:key.intValue];
                  NSString *groupName;
                  if([[linkman objectForKey:@"用户类型"] isEqualToString:@"老师"])
-                     groupName=[linkman objectForKey:@"虚拟班级"];
+                     groupName=[linkman objectForKey:@"部门"];
                  else
                      groupName=[linkman objectForKey:@"班级"];
                  int section=(int)[groupArray indexOfObject:groupName];
-                 [self updateHeadSelImage:section];
+                 if(section>=0)
+                     [self updateHeadSelImage:section];
              }
              
          }];

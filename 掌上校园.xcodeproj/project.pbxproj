@@ -2585,8 +2585,8 @@
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "iPhone Developer: jiyun wang (P48G376K5D)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: jiyun wang (P48G376K5D)";
 				COPY_PHASE_STRIP = NO;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -2672,7 +2672,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.dandian.TeacherAssistant;
 				PRODUCT_NAME = PocketCampus;
-				PROVISIONING_PROFILE = "5658048f-f6b4-4d52-9665-53fb85facce9";
+				PROVISIONING_PROFILE = "4db4a3c4-42ae-42bd-8989-d04f9edf80d0";
 				SDKROOT = iphoneos;
 				WRAPPER_EXTENSION = app;
 			};
@@ -2707,7 +2707,7 @@
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dandian.TeacherAssistant;
 				PRODUCT_NAME = PocketCampus;
-				PROVISIONING_PROFILE = "5658048f-f6b4-4d52-9665-53fb85facce9";
+				PROVISIONING_PROFILE = "4db4a3c4-42ae-42bd-8989-d04f9edf80d0";
 				SDKROOT = iphoneos;
 				WRAPPER_EXTENSION = app;
 			};

@@ -22,6 +22,7 @@
 
 @property (strong, nonatomic) UILabel *titleLabel;
 @property (strong, nonatomic) UILabel *messageLabel;
+@property (strong, nonatomic) UIActivityIndicatorView *indicatorView;
 @property (strong, nonatomic) UITapGestureRecognizer *dismissTap;
 @property UIInterfaceOrientation interfaceOrientation;
 @property CGFloat bottomMargin;
@@ -91,6 +92,10 @@
         
         [self addSubview:_messageLabel];
         
+        _indicatorView=[[UIActivityIndicatorView alloc]initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+        _indicatorView.hidesWhenStopped=true;
+        [self addSubview:_indicatorView];
+        
         self.style = OLGhostAlertViewStyleDefault;
         _position = OLGhostAlertViewPositionBottom;
         
@@ -120,7 +125,18 @@
     }
     return self;
 }
-
+- (id)initWithIndicator:(NSString *)title timeout:(NSTimeInterval)timeout dismissible:(BOOL)dismissible
+{
+    self = [self initWithFrame:CGRectZero];
+    if (self) {
+        self.title=title;
+        self.timeout = timeout;
+        self.dismissible = dismissible;
+        self.position = OLGhostAlertViewPositionCenter;
+        [self.indicatorView startAnimating];
+    }
+    return self;
+}
 - (id)initWithTitle:(NSString *)title message:(NSString *)message timeout:(NSTimeInterval)timeout dismissible:(BOOL)dismissible
 {
     self = [self initWithFrame:CGRectZero];
@@ -143,6 +159,8 @@
 
 - (id)initWithTitle:(NSString *)title
 {
+    if([title isEqualToString:@"The request timed out"])
+        title=@"请求超时，请重试";
     self = [self initWithTitle:title message:nil timeout:2 dismissible:YES];
     self.position = OLGhostAlertViewPositionCenter;
     self.style=OLGhostAlertViewStyleDark;
@@ -238,13 +256,18 @@
     } else {
         totalHeight = titleSize.height + floorf(VERTICAL_PADDING * 2);
     }
-    
+    if(self.indicatorView.isAnimating)
+    {
+        totalHeight = titleSize.height + self.indicatorView.frame.size.height + floorf(VERTICAL_PADDING * 2.5);
+    }
     if (titleSize.width == maxWidth || messageSize.width == maxWidth)
         totalLabelWidth = maxWidth;
     
     else if (messageSize.width > titleSize.width)
         totalLabelWidth = messageSize.width;
     
+    else if(self.indicatorView.frame.size.width>titleSize.width)
+        totalLabelWidth=self.indicatorView.frame.size.width;
     else
         totalLabelWidth = titleSize.width;
     
@@ -278,6 +301,8 @@
     
     if (self.messageLabel) 
         self.messageLabel.frame = CGRectMake(self.messageLabel.frame.origin.x, ceilf(titleSize.height) + floorf(VERTICAL_PADDING * 1.5), ceilf(totalLabelWidth), ceilf(messageSize.height));
+    if(self.indicatorView.isAnimating)
+        self.indicatorView.center=CGPointMake(totalWidth/2, floorf(VERTICAL_PADDING * 1.5)+titleSize.height+self.indicatorView.frame.size.height/2);
 }
 
 - (void)keyboardWillShow:(NSNotification*)notification

@@ -202,12 +202,13 @@ extern int kUserType;
     self.parentViewController.navigationItem.title=self.className;
    
     self.parentViewController.navigationItem.rightBarButtonItem =rightBtn;
-    
+    [super viewDidAppear:animated];
     
 }
 -(void)viewWillDisappear:(BOOL)animated
 {
     self.parentViewController.navigationItem.titleView=nil;
+    [super viewWillDisappear:animated];
 }
 
 -(void)startClick:(UIBarButtonItem *)sender
@@ -520,10 +521,11 @@ extern int kUserType;
     static NSString *CellIdentifier = @"cellExam";
     UILabel *titleLabel = nil;
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    float viewWidth=self.view.frame.size.width;
     if (cell == nil)
     {
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] ;
-        titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 5, 280, 20)];
+        titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(20, 5, viewWidth-40, 20)];
         [titleLabel setLineBreakMode:NSLineBreakByCharWrapping];
         [titleLabel setNumberOfLines:0];
         [titleLabel setFont:[UIFont systemFontOfSize:16]];
@@ -561,7 +563,7 @@ extern int kUserType;
     {
         titleLabel=(UILabel *)[cell viewWithTag:11];
     }
-    [titleLabel setFrame:CGRectMake(10, 10, cell.frame.size.width-20, cell.frame.size.height-10)];
+    [titleLabel setFrame:CGRectMake(10, 10, viewWidth-20, cell.frame.size.height-10)];
     NSDictionary *item=[examArray objectAtIndex:indexPath.row];
     titleLabel.text=[item objectForKey:@"题目名称"];
     [titleLabel sizeToFit];
@@ -577,7 +579,7 @@ extern int kUserType;
             continue;
         NSString *rightAnswer=[item objectForKey:@"正确答案"];
         UIButton *selectionBtn=(UIButton *)[cell viewWithTag:12+i];
-        [selectionBtn setFrame:CGRectMake(20, curY, cell.frame.size.width-40, 20)];
+        [selectionBtn setFrame:CGRectMake(20, curY, viewWidth-40, 20)];
 //        [selectionBtn setTitle:[NSString stringWithFormat:@"%@.%@",tigan,neirong] forState:UIControlStateNormal];
         UILabel *titleLabel=(UILabel *)[selectionBtn viewWithTag:100];
         [titleLabel setFrame:CGRectMake(5, 5, selectionBtn.frame.size.width-5, selectionBtn.frame.size.height)];
@@ -607,7 +609,7 @@ extern int kUserType;
     {
         
         UILabel *lblResult=(UILabel *)[cell viewWithTag:20];
-        [lblResult setFrame:CGRectMake(20, curY, cell.frame.size.width-40, 20)];
+        [lblResult setFrame:CGRectMake(20, curY, viewWidth-40, 20)];
         
         if(kUserType==1)
         {
@@ -633,7 +635,7 @@ extern int kUserType;
         [lblResult sizeToFit];
         curY=curY+lblResult.frame.size.height+5;
     }
-    [cell setFrame:CGRectMake(0, 0, 320, curY)];
+    [cell setFrame:CGRectMake(0, 0, viewWidth, curY)];
     return cell;
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath

@@ -25,10 +25,13 @@
     NSString *segUrl1;
     #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
         UIAlertController *alertController;
+    #else
+        UIViewController *alertController;
     #endif
 }
 
 @property (nonatomic,strong) NSString *interfaceUrl;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *thirdviewheight;
 
 @property (weak, nonatomic) IBOutlet UIButton *headImage;
 @property (strong, nonatomic) IBOutletCollection (UIButton) NSArray *btnChuqins;
@@ -43,6 +46,7 @@
 @property (weak, nonatomic) IBOutlet UILabel *lblBanji;
 
 @property (weak, nonatomic) IBOutlet UIView *searchView;
+@property (weak, nonatomic) IBOutlet UIView *thirdView;
 - (IBAction)showBigPic:(id)sender;
 - (IBAction)showDetail:(id)sender;
 - (IBAction)openAcSheet:(id)sender;

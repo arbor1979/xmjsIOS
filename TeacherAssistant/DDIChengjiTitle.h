@@ -13,6 +13,11 @@
 #import "CommonFunc.h"
 #import "UIImage+Scale.h"
 #import "DDIChengjiDetail.h"
+#import "DDIWenJuanDetail.h"
+#import "DDIWenJuanTitle.h"
+#import "NSString+URLEncoding.h"
+#import <SDWebImage/UIImageView+WebCache.h>
+
 @interface DDIChengjiTitle : UITableViewController
 {
     NSArray *titleArray;
@@ -21,6 +26,8 @@
     OLGhostAlertView *alertTip;
     UIColor *mygreen;
     NSString *btnUrl;
+    NSString *btnSubmit;
+    UIImage *emptyPhoto;
 }
 
 @property (nonatomic,strong) NSString *interfaceUrl;

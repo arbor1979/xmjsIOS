@@ -82,7 +82,7 @@ extern NSString *kInitURL;//默认单点webServic
         [tipView show];
     }
 //    self.tableView.contentOffset=CGPointMake(0, 10000);
-
+    [super viewDidAppear:animated];
 }
 -(void)dealloc
 {
@@ -143,22 +143,28 @@ extern NSString *kInitURL;//默认单点webServic
                 [subview removeFromSuperview];
         }
         UIFont *font=[UIFont boldSystemFontOfSize:15];
-        CGSize size1 = [news.title sizeWithFont:font constrainedToSize:CGSizeMake(285, 1000.0f) lineBreakMode:NSLineBreakByWordWrapping];
-        TQRichTextView *title=[[TQRichTextView alloc]initWithFrame:CGRectMake(18, 10, 285, size1.height+5)];;
-        title.userInteractionEnabled=NO;
+        int width=self.view.frame.size.width-35;
+        
+        DDIGifView *title=[[DDIGifView alloc]initWithFrame:CGRectMake(18, 10, width, 0)];
+        title.minWidth=width;
+        title.gifWidth=18;
+        //title.imageZoom=0.8;
         title.tag=101;
         title.font=font;
         title.backgroundColor=[UIColor clearColor];
-        title.text=[news.title stringByReplacingOccurrencesOfString:@"[附件]" withString:@" [附件]"];
+        //NSLog(@"%@",news.title);
+        title.msgContent=news.title;
+        
         [cell.contentView addSubview:title];
         
-        UIImageView *imagev=[[UIImageView alloc]initWithFrame:CGRectMake(18, 10+title.frame.size.height+8, 285, 100)];
+        UIImageView *imagev=[[UIImageView alloc]initWithFrame:CGRectMake(18, 10+title.frame.size.height+8, width, 100)];
         imagev.tag=103;
         [cell.contentView addSubview:imagev];
-        UILabel *content=[[UILabel alloc]initWithFrame:CGRectMake(20, 147, 285, 55)];
+        UILabel *content=[[UILabel alloc]initWithFrame:CGRectMake(20, imagev.frame.origin.y+108, width, 55)];
         content.backgroundColor=[UIColor clearColor];
         content.tag=104;
         content.font=[UIFont systemFontOfSize:14];
+        //content.lineBreakMode=NSLineBreakByCharWrapping;
         content.numberOfLines=0;
         [cell.contentView addSubview:content];
        
@@ -173,8 +179,8 @@ extern NSString *kInitURL;//默认单点webServic
                 UIImage *img=[UIImage imageWithContentsOfFile:filename];
                 float rate=img.size.height/img.size.width;
                 int height=imagev.frame.size.width*rate;
-                imagev.frame=CGRectMake(imagev.frame.origin.x,imagev.frame.origin.y, 285, height);
-                content.frame=CGRectMake(20, imagev.frame.origin.y+height+8, 285, 55);
+                imagev.frame=CGRectMake(imagev.frame.origin.x,imagev.frame.origin.y, width, height);
+                content.frame=CGRectMake(20, imagev.frame.origin.y+height+8, width, 55);
                 imagev.image=img;
             }
             else
@@ -254,13 +260,13 @@ extern NSString *kInitURL;//默认单点webServic
            for(NSDictionary *item in tmpArray)
            {
                NSMutableDictionary *newItem=[NSMutableDictionary dictionaryWithDictionary:item];
-               NSString *newUrl=[NSString stringWithFormat:@"%@%@",self.interfaceUrl,[newItem objectForKey:@"最下边一行URL"]];
+               NSString *newUrl=[NSString stringWithFormat:@"%@",[newItem objectForKey:@"最下边一行URL"]];
                [newItem setObject:newUrl forKey:@"最下边一行URL"];
                [newItem setObject:kUserIndentify forKey:@"用户唯一码"];
                [datam insertNewsRecord:newItem newsType:newsType];
            }
            
-           [self performSelector:@selector(doneLoadingTableViewData:) withObject:[NSNumber numberWithInt:tmpArray.count] afterDelay:0.5];
+           [self performSelector:@selector(doneLoadingTableViewData:) withObject:[NSNumber numberWithInt:(int)tmpArray.count] afterDelay:0.5];
        }
        
        
@@ -278,6 +284,19 @@ extern NSString *kInitURL;//默认单点webServic
     if(indexPath.row==0)
     {
         News *news=[newsList objectAtIndex:indexPath.section];
+        int width=self.view.frame.size.width-35;
+        UIFont *font=[UIFont boldSystemFontOfSize:15];
+        if(!temptitle)
+        {
+            temptitle=[[DDIGifView alloc]initWithFrame:CGRectMake(18, 10, width, 0)];
+            temptitle.minWidth=width;
+            temptitle.font=font;
+            temptitle.gifWidth=18;
+        }
+        temptitle.msgContent=news.title;
+        int titleHeight=temptitle.frame.size.height+8;
+        int imageHeight=0;
+        int contentHeight=65;
         if(news.image && news.image.length>0)
         {
             NSArray *sepArray=[news.image componentsSeparatedByString:@"/"];
@@ -286,18 +305,14 @@ extern NSString *kInitURL;//默认单点webServic
             if([CommonFunc fileIfExist:filename])
             {
                 UIImage *img=[UIImage imageWithContentsOfFile:filename];
-                int imgHeight=img.size.height/img.size.width*285;
-                UIFont *font=[UIFont boldSystemFontOfSize:15];
-                CGSize size1 = [news.title sizeWithFont:font constrainedToSize:CGSizeMake(285, 1000.0f) lineBreakMode:NSLineBreakByWordWrapping];
-                int titleHeight=size1.height;
-                int contentHeight=55;
-                return imgHeight+titleHeight+contentHeight+10+24;
+                float rate=img.size.height/img.size.width;
+                int height=width*rate;
+                imageHeight=height+8;
             }
             else
-                return 210;
+                imageHeight=108;
         }
-        else
-            return 110;
+        return 10+titleHeight+imageHeight+contentHeight;
     }
     else
         return 32;
@@ -312,12 +327,37 @@ extern NSString *kInitURL;//默认单点webServic
         controller.navigationItem.title=[NSString stringWithFormat:@"%@详情",self.title];
         controller.urlStr=news.url;
         [self.navigationController pushViewController:controller animated:YES];
+        if(news.ifread==0)
+            [datam clearUnReadByNewsId:news.rowid];
     }
     else
+    {
+        NSRange range=[news.url rangeOfString:self.interfaceUrl];
+        if(range.location== NSNotFound)
+            news.url=[NSString stringWithFormat:@"%@%@",self.interfaceUrl,news.url];
         [self performSegueWithIdentifier:@"newsDetail" sender:news];
-    
+    }
+    if(news.ifread==0)
+        [self updateOANewsIfRead:news.newsid];
 }
-
+-(void)updateOANewsIfRead:(int)news_id
+{
+    NSMutableDictionary *dic=[[NSMutableDictionary alloc] init ];
+    [dic setObject:kUserIndentify forKey:@"用户较验码"];
+    [dic setObject:[NSNumber numberWithInt:news_id]  forKey:@"news_id"];
+    NSError *error;
+    NSData *postData=[NSJSONSerialization dataWithJSONObject:dic options:NSJSONWritingPrettyPrinted error:&error];
+    NSString *postStr = [[NSString alloc] initWithData:postData encoding:NSUTF8StringEncoding];
+    postStr=[GTMBase64 base64StringBystring:postStr];
+    NSString *urlStr=[NSString stringWithFormat:@"%@InterfaceStudent/%@?action=ifread",kInitURL,self.interfaceUrl];
+    NSURL *url = [NSURL URLWithString:urlStr];
+    ASIFormDataRequest* request = [ASIFormDataRequest requestWithURL:url];
+    [request setPostValue:postStr forKey:@"DATA"];
+    [request setDelegate:self];
+    request.username=@"同步OA已读状态";
+    [request startAsynchronous];
+    [requestArray addObject:request];
+}
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
     DDINewsDetail *detial=segue.destinationViewController;

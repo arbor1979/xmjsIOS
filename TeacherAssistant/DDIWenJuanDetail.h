@@ -18,7 +18,7 @@
 #import "MDRadialProgressView.h"
 #import "MDRadialProgressTheme.h"
 #import "DDIPictureBrows.h"
-
+#import "NSString+URLEncoding.h"
 @interface DDIWenJuanDetail : UITableViewController<UITextViewDelegate,UIActionSheetDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate,UIPickerViewDataSource,UIPickerViewDelegate>
 {
     NSMutableArray *detailArray;
@@ -33,7 +33,6 @@
     UIColor *myGreen;
     UIImage *addPhoto;
     MDRadialProgressView *rpv;
-    UITableViewCell *parentCell;
     
     UIActionSheet *pickerActionSheet;
     
@@ -41,16 +40,17 @@
     UIDatePicker *dtPickerView;
     NSArray *pickerArray;
     UIButton *senderBtn;
-
-    int top;
-    int curRow;
+    int curRowIndex;
     
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
     UIAlertController *alertController;
+#else
+    UIViewController *alertController;
 #endif
 }
 @property (nonatomic,strong) NSString *interfaceUrl;
 @property (nonatomic,strong) NSString *examStatus;
+@property (nonatomic,strong) NSString *autoClose;
 @property (nonatomic,strong) NSMutableArray *parentTitleArray;
 @property (nonatomic) int key;
 @end

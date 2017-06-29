@@ -41,11 +41,6 @@ extern NSString *kInitURL;
     NSArray * buttonsArray = [NSArray arrayWithObjects:button1,button2,doneButton,nil];
     [topView setItems:buttonsArray];
     
-    if([_examStatus isEqualToString:@"进行中"])
-        enabled=true;
-    else
-        
-        enabled=false;
     
     rightBtn= [[UIBarButtonItem alloc] initWithTitle:@"保存" style:UIBarButtonItemStyleBordered target:self action:@selector(saveAnswer)];
     savePath=[CommonFunc createPath:@"/wenJuanPic/"];
@@ -60,11 +55,13 @@ extern NSString *kInitURL;
     pickerView.showsSelectionIndicator = YES;
     
     UINavigationBar *navBar = [[UINavigationBar alloc] initWithFrame:CGRectMake(0, 0, 320, 40)];
-    UINavigationItem *navItem = [[UINavigationItem alloc] initWithTitle:nil];
+    UINavigationItem *navItem = [[UINavigationItem alloc] initWithTitle:@""];
+    UIBarButtonItem *spacer=[[UIBarButtonItem alloc]initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
+    spacer.width=20;
     UIBarButtonItem *leftButton = [[UIBarButtonItem alloc] initWithTitle:@"取消" style:UIBarButtonItemStyleBordered target:self action:@selector(docancel)];
-    navItem.leftBarButtonItem = leftButton;
+    navItem.leftBarButtonItems = [NSArray arrayWithObjects:spacer,leftButton,nil];
     UIBarButtonItem *rightButton = [[UIBarButtonItem alloc] initWithTitle:@"确定" style:UIBarButtonItemStyleDone target:self action:@selector(done)];
-    navItem.rightBarButtonItem = rightButton;
+    navItem.rightBarButtonItems =[NSArray arrayWithObjects:spacer,rightButton,nil];
     NSArray *array = [[NSArray alloc] initWithObjects:navItem, nil];
     [navBar setItems:array];
     
@@ -72,13 +69,15 @@ extern NSString *kInitURL;
     
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
     
-    
-    alertController = [UIAlertController alertControllerWithTitle:@"\n\n\n\n\n\n\n\n\n\n" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
-    pickerView.frame=CGRectMake(0, 40, alertController.view.bounds.size.width-16, 120);
-    navBar.frame=CGRectMake(0, 0, alertController.view.bounds.size.width-16, 40);
-    
-    [alertController.view addSubview:navBar];
-    [alertController.view addSubview:pickerView];
+    if([[[UIDevice currentDevice]systemVersion] floatValue] >=8.0)
+    {
+        alertController = [UIAlertController alertControllerWithTitle:@"\n\n\n\n\n\n\n\n\n\n" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+        pickerView.frame=CGRectMake(0, 40, alertController.view.bounds.size.width-16, 120);
+        navBar.frame=CGRectMake(0, 0, alertController.view.bounds.size.width-16, 40);
+        
+        [alertController.view addSubview:navBar];
+        [alertController.view addSubview:pickerView];
+    }
     
 #endif
     
@@ -102,20 +101,19 @@ extern NSString *kInitURL;
 }
 
 - (void) done{
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
-    [alertController dismissViewControllerAnimated:YES completion:nil];
-#else
-    [pickerActionSheet dismissWithClickedButtonIndex:0 animated:YES];
-#endif
+    if(alertController)
+        [alertController dismissViewControllerAnimated:YES completion:nil];
+    else
+        [pickerActionSheet dismissWithClickedButtonIndex:0 animated:YES];
     
-    if([dtPickerView.superview isKindOfClass:[UIActionSheet class]])
+    if([dtPickerView.superview isKindOfClass:[UIView class]])
     {
         
         NSString *currentDateStr = [CommonFunc stringFromDateShort:dtPickerView.date];
         [senderBtn setTitle:currentDateStr forState:UIControlStateNormal];
         
     }
-    else if([pickerView.superview isKindOfClass:[UIActionSheet class]])
+    else if([pickerView.superview isKindOfClass:[UIView class]])
     {
         NSInteger index=[pickerView selectedRowInComponent:0];
         NSString *currentDateStr = [pickerArray objectAtIndex:index];
@@ -128,33 +126,32 @@ extern NSString *kInitURL;
 }
 
 - (void) docancel{
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
-    [alertController dismissViewControllerAnimated:YES completion:nil];
-#else
-    [pickerActionSheet dismissWithClickedButtonIndex:1 animated:YES];
-#endif
+    if(alertController)
+        [alertController dismissViewControllerAnimated:YES completion:nil];
+    else
+        [pickerActionSheet dismissWithClickedButtonIndex:1 animated:YES];
     
 }
 
--(void)viewWillAppear:(BOOL)animated
-{
-    [super viewWillAppear:animated];
-    if(enabled)
-        self.navigationItem.rightBarButtonItem =rightBtn;
-}
 
 -(void) saveAnswer
 {
+    if(detailArray.count==0)
+    {
+        OLGhostAlertView *tipView = [[OLGhostAlertView alloc] initWithTitle:@"没有可保存的数据"];
+        [tipView show];
+        return;
+    }
     NSMutableArray *result=[NSMutableArray new];
     for (int i=0; i<detailArray.count; i++) {
         NSDictionary *item=[detailArray objectAtIndex:i];
         NSString *ifNeed=[item objectForKey:@"是否必填"];
         if(!ifNeed)
             ifNeed=@"是";
-        if([[item objectForKey:@"类型"] isEqualToString:@"图片"])
+        if([[item objectForKey:@"类型"] isEqualToString:@"图片"] || [[item objectForKey:@"类型"] isEqualToString:@"附件"])
         {
             NSArray *answer=[item objectForKey:@"用户答案"];
-            if((!answer || answer.count==0 || [answer isEqual:[NSNull null]]) && [ifNeed isEqualToString:@"是"])
+            if((!answer || [answer isEqual:[NSNull null]] || answer.count==0) && [ifNeed isEqualToString:@"是"])
             {
                 OLGhostAlertView *tipView = [[OLGhostAlertView alloc] initWithTitle:@"请上传图片"];
                 [tipView show];
@@ -167,7 +164,7 @@ extern NSString *kInitURL;
         else
         {
             NSString *answer=[item objectForKey:@"用户答案"];
-            if((!answer || answer.length==0 || [answer isEqual:[NSNull null]]) && [ifNeed isEqualToString:@"是"])
+            if((!answer || [answer isEqual:[NSNull null]] || answer.length==0) && [ifNeed isEqualToString:@"是"])
             {
                 OLGhostAlertView *tipView = [[OLGhostAlertView alloc] initWithTitle:@"请填写所有选项"];
                 [tipView show];
@@ -175,6 +172,8 @@ extern NSString *kInitURL;
                 [self.tableView scrollToRowAtIndexPath:indexPath atScrollPosition:UITableViewScrollPositionTop animated:YES];
                 return;
             }
+            if(answer==nil)
+                answer=@"";
             [result addObject:answer];
         }
         
@@ -190,7 +189,7 @@ extern NSString *kInitURL;
     NSNumber *timeStamp=[[NSNumber alloc] initWithLong:[[NSDate new] timeIntervalSince1970]];
     [dic setObject:timeStamp forKey:@"DATETIME"];
     
-    NSURL *url = [NSURL URLWithString:urlStr];
+    NSURL *url = [NSURL URLWithString:[urlStr URLEncodedString]];
     ASIFormDataRequest *request = [ASIFormDataRequest requestWithURL:url];
     NSError *error;
     request.userInfo=dic;
@@ -243,7 +242,16 @@ extern NSString *kInitURL;
             self.title=[dict objectForKey:@"标题显示"];
             saveUrl=[dict objectForKey:@"提交地址"];
             detailArray=[NSMutableArray arrayWithArray:[dict objectForKey:@"调查问卷数值"]];
-            
+            NSString *autoClose=[dict objectForKey:@"自动关闭"];
+            if(autoClose) _autoClose=autoClose;
+            NSString *status=[dict objectForKey:@"调查问卷状态"];
+            if(status) _examStatus=status;
+            if([_examStatus isEqualToString:@"进行中"])
+                enabled=true;
+            else
+                enabled=false;
+            if(enabled)
+                self.navigationItem.rightBarButtonItem =rightBtn;
         }
         if(!dict || !detailArray || detailArray.count==0)
         {
@@ -269,8 +277,9 @@ extern NSString *kInitURL;
         if([result isEqualToString:@"成功"] || [[dict objectForKey:@"结果"] isEqualToString:@"成功"])
         {
             result=@"已保存";
+            /*
             NSDictionary *outData=[dict objectForKey:@"输出数据"];
-            if(outData)
+            if(outData && outData.count>0)
             {
                 detailArray=[NSMutableArray arrayWithArray:[outData objectForKey:@"调查问卷数值"]];
                 _examStatus=[outData objectForKey:@"调查问卷状态"];
@@ -294,7 +303,8 @@ extern NSString *kInitURL;
                     }
                     
                 }
-                if(_key>-1)
+                
+                if(_key>-1 && _examStatus)
                 {
                     NSMutableDictionary *item=[[NSMutableDictionary alloc]initWithDictionary:[_parentTitleArray objectAtIndex:_key]];
                     [item setObject:_examStatus forKey:@"第二行之状态"];
@@ -305,9 +315,10 @@ extern NSString *kInitURL;
                 }
                 
             }
-            
+            */
             NSString *autoClose=[dict objectForKey:@"自动关闭"];
-            if([autoClose isEqualToString:@"是"])
+            if(autoClose) _autoClose=autoClose;
+            if(_autoClose && [_autoClose isEqualToString:@"是"])
             {
                 [self.navigationController popViewControllerAnimated:YES];
                 [[NSNotificationCenter defaultCenter] postNotificationName:@"needRefreshDetail" object:nil];
@@ -327,6 +338,8 @@ extern NSString *kInitURL;
     else if([request.username isEqualToString:@"上传问卷调查"])
     {
         if(rpv) [rpv removeFromSuperview];
+        if(alertTip)
+            [alertTip removeFromSuperview];
         NSData *data = [request responseData];
         NSString *dataStr=[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
         dataStr=[GTMBase64 stringByBase64String:dataStr];
@@ -339,14 +352,23 @@ extern NSString *kInitURL;
             NSDictionary *dic=request.userInfo;
             NSData *data=[dic objectForKey:@"data"];
             NSString *filename=[dict objectForKey:@"文件名"];
-            filename=[savePath stringByAppendingString:filename];
-            [data writeToFile:filename atomically:YES];
-            NSMutableDictionary *item=[NSMutableDictionary dictionaryWithDictionary:[detailArray objectAtIndex:curRow]];
+            NSString *filepath=[savePath stringByAppendingString:filename];
+            [data writeToFile:filepath atomically:YES];
+            NSMutableDictionary *item=[NSMutableDictionary dictionaryWithDictionary:[detailArray objectAtIndex:curRowIndex]];
             NSMutableArray *photosArray=[NSMutableArray arrayWithArray:[item objectForKey:@"用户答案"]];
-            [photosArray addObject:dict];
+            if([[item objectForKey:@"类型"] isEqualToString:@"附件"])
+            {
+                NSMutableDictionary *newdict=[NSMutableDictionary dictionary];
+                [newdict setObject:filename forKey:@"name"];
+                [newdict setObject:filename forKey:@"newname"];
+                [newdict setObject:[dict objectForKey:@"文件地址"] forKey:@"url"];
+                [photosArray addObject:newdict];
+            }
+            else
+                [photosArray addObject:dict];
             [item setObject:photosArray forKey:@"用户答案"];
-            [detailArray replaceObjectAtIndex:curRow withObject:item];
-            NSIndexSet *indexSet=[[NSIndexSet alloc]initWithIndex:curRow];
+            [detailArray replaceObjectAtIndex:curRowIndex withObject:item];
+            NSIndexSet *indexSet=[[NSIndexSet alloc]initWithIndex:curRowIndex];
             [self.tableView reloadSections:indexSet withRowAnimation:UITableViewRowAnimationAutomatic];
             
         }
@@ -359,6 +381,7 @@ extern NSString *kInitURL;
         NSString *filename=[item objectForKey:@"文件名"];
         filename=[savePath stringByAppendingString:filename];
         [datas writeToFile:filename atomically:YES];
+        UITableViewCell *parentCell=[item objectForKey:@"parentCell"];
         UIButton *btn=(UIButton *)[parentCell.contentView viewWithTag:request.tag];
         for(UIActivityIndicatorView *v in btn.subviews)
         {
@@ -374,14 +397,16 @@ extern NSString *kInitURL;
     {
         NSDictionary *dict=request.userInfo;
         NSString *filename=[dict objectForKey:@"文件名"];
+        if(filename==nil || filename.length==0)
+            filename=[dict objectForKey:@"newname"];
         filename=[savePath stringByAppendingString:filename];
         [CommonFunc deleteFile:filename];
-        NSMutableDictionary *item=[NSMutableDictionary dictionaryWithDictionary:[detailArray objectAtIndex:curRow]];
+        NSMutableDictionary *item=[NSMutableDictionary dictionaryWithDictionary:[detailArray objectAtIndex:curRowIndex]];
         NSMutableArray *photosArray=[NSMutableArray arrayWithArray:[item objectForKey:@"用户答案"]];
         [photosArray removeObject:dict];
         [item setObject:photosArray forKey:@"用户答案"];
-        [detailArray replaceObjectAtIndex:curRow withObject:item];
-        NSIndexSet *indexSet=[[NSIndexSet alloc]initWithIndex:curRow];
+        [detailArray replaceObjectAtIndex:curRowIndex withObject:item];
+        NSIndexSet *indexSet=[[NSIndexSet alloc]initWithIndex:curRowIndex];
         [self.tableView reloadSections:indexSet withRowAnimation:UITableViewRowAnimationAutomatic];
     }
 
@@ -399,6 +424,7 @@ extern NSString *kInitURL;
     if([request.username isEqualToString:@"上传问卷调查"])
     {
         if(rpv) [rpv removeFromSuperview];
+        if(alertTip) [alertTip removeFromSuperview];
     }
     NSError *error = [request error];
     NSLog(@"请求失败:%@",[error localizedDescription]);
@@ -482,7 +508,7 @@ extern NSString *kInitURL;
         
     }
     UILabel *titleLabel=(UILabel *)[cell viewWithTag:11];
-    [titleLabel setFrame:CGRectMake(10, 10, cell.contentView.frame.size.width-20, cell.frame.size.height-10)];
+    [titleLabel setFrame:CGRectMake(10, 10, self.view.frame.size.width-20, cell.frame.size.height-10)];
     titleLabel.text=[NSString stringWithFormat:@"%d.%@",(int)indexPath.section+1,[item objectForKey:@"题目"]];
     [titleLabel sizeToFit];
     curY=titleLabel.frame.size.height+10;
@@ -500,7 +526,7 @@ extern NSString *kInitURL;
             QRadioButton *bodybtn = [[QRadioButton alloc] initWithDelegate:self groupId:groupId];
             bodybtn.tag=12+i;
             bodybtn.enabled=enabled;
-            [bodybtn setFrame:CGRectMake(20, curY, cell.frame.size.width-40, 25)];
+            [bodybtn setFrame:CGRectMake(20, curY, self.view.frame.size.width-40, 25)];
             
             UILabel *detailLabel=[[UILabel alloc]initWithFrame:CGRectMake(20, 5, bodybtn.frame.size.width-20, 20)];
             [detailLabel setTextColor:[UIColor darkGrayColor]];
@@ -518,7 +544,7 @@ extern NSString *kInitURL;
             detailLabel.text=neirong;
             [detailLabel sizeToFit];
             
-            [bodybtn setFrame:CGRectMake(20, curY, cell.frame.size.width-40, detailLabel.frame.size.height+10)];
+            [bodybtn setFrame:CGRectMake(20, curY, self.view.frame.size.width-40, detailLabel.frame.size.height+10)];
             curY=curY+bodybtn.frame.size.height+5;
             
             NSString *myAnswer=[item objectForKey:@"用户答案"];
@@ -537,7 +563,7 @@ extern NSString *kInitURL;
             QCheckBox *bodybtn = [[QCheckBox alloc] initWithDelegate:self];
             bodybtn.enabled=enabled;
             [bodybtn setTag:12+i];
-            [bodybtn setFrame:CGRectMake(20, curY, cell.frame.size.width-40, 25)];
+            [bodybtn setFrame:CGRectMake(20, curY, self.view.frame.size.width-40, 25)];
             
             UILabel *detailLabel=[[UILabel alloc]initWithFrame:CGRectMake(20, 5, bodybtn.frame.size.width-20, 20)];
             [detailLabel setTextColor:[UIColor darkGrayColor]];
@@ -557,7 +583,7 @@ extern NSString *kInitURL;
             detailLabel.text=neirong;
             [detailLabel sizeToFit];
             
-            [bodybtn setFrame:CGRectMake(20, curY, cell.frame.size.width-40, detailLabel.frame.size.height+10)];
+            [bodybtn setFrame:CGRectMake(20, curY, self.view.frame.size.width-40, detailLabel.frame.size.height+10)];
             curY=curY+bodybtn.frame.size.height+5;
             
             NSString *myAnswer=[item objectForKey:@"用户答案"];
@@ -576,7 +602,11 @@ extern NSString *kInitURL;
     
     if([type isEqualToString:@"单行文本输入框"])
     {
-        UITextView *txtView=[[UITextView alloc] initWithFrame:CGRectMake(10,curY+5,cell.contentView.frame.size.width-20,100)];
+        NSNumber *lines=[item objectForKey:@"行数"];
+        CGFloat textVheight=100;
+        if(lines.intValue>0)
+            textVheight=lines.intValue*20;
+        UITextView *txtView=[[UITextView alloc] initWithFrame:CGRectMake(10,curY+5,self.view.frame.size.width-20,textVheight)];
         txtView.tag=indexPath.section;
         txtView.editable=enabled;
         txtView.font=[UIFont systemFontOfSize:15];
@@ -592,7 +622,7 @@ extern NSString *kInitURL;
     
     if([type isEqualToString:@"日期"])
     {
-         UIButton *dateBtn=[[UIButton alloc] initWithFrame:CGRectMake(10,curY+5,cell.contentView.frame.size.width-20,25)];
+         UIButton *dateBtn=[[UIButton alloc] initWithFrame:CGRectMake(10,curY+5,self.view.frame.size.width-20,25)];
         dateBtn.tag=indexPath.section;
         [dateBtn setTitle:[item objectForKey:@"用户答案"] forState:UIControlStateNormal];
         [dateBtn setTitleColor:dateBtn.tintColor forState:UIControlStateNormal];
@@ -603,7 +633,7 @@ extern NSString *kInitURL;
     
     if([type isEqualToString:@"下拉"])
     {
-        UIButton *comboBtn=[[UIButton alloc] initWithFrame:CGRectMake(10,curY+5,cell.contentView.frame.size.width-20,25)];
+        UIButton *comboBtn=[[UIButton alloc] initWithFrame:CGRectMake(10,curY+5,self.view.frame.size.width-20,25)];
         comboBtn.tag=indexPath.section;
         [comboBtn setTitle:[item objectForKey:@"用户答案"] forState:UIControlStateNormal];
         [comboBtn setTitleColor:comboBtn.tintColor forState:UIControlStateNormal];
@@ -614,18 +644,21 @@ extern NSString *kInitURL;
     
     if([type isEqualToString:@"图片"])
     {
-        
-        parentCell=cell;
-        top=curY+5;
+        float top=curY+5;
         curY=curY+65;
-        curRow=(int)indexPath.section;
-        [self drawImageFromArray];
+        [self drawImageFromArray:cell curRow:(int)indexPath.section top:top];
+    }
+    if([type isEqualToString:@"附件"])
+    {
+        float top=curY+5;
+        float fujianheight=[self drawFujianFromArray:cell curRow:(int)indexPath.section top:top];
+        curY=curY+fujianheight;
     }
     if([_examStatus isEqualToString:@"已结束"] && ![type isEqualToString:@"单行文本输入框"] && ![type isEqualToString:@"图片"] && ![type isEqualToString:@"日期"])
     {
      
         UILabel *lblResult=(UILabel *)[cell viewWithTag:100];
-        [lblResult setFrame:CGRectMake(20, curY, cell.frame.size.width-40, 20)];
+        [lblResult setFrame:CGRectMake(20, curY, self.view.frame.size.width-40, 20)];
         lblResult.text=[item objectForKey:@"备注"];
         if(lblResult.text.length>7 && [[lblResult.text substringToIndex:7] isEqualToString:@"答题状态:错误"])
             [lblResult setTextColor:[UIColor redColor]];
@@ -636,21 +669,20 @@ extern NSString *kInitURL;
         [lblResult sizeToFit];
         curY=curY+lblResult.frame.size.height+5;
     }
-    
+    /*
+    else
+    {
+        UILabel *lblResult=(UILabel *)[cell viewWithTag:100];
+        lblResult.text=@"";
+    }
+    */
     [cell setFrame:CGRectMake(0, 0, 320, curY)];
     return cell;
 }
 -(void)popDatePicker:(UIButton *)sender
 {
     senderBtn=sender;
-    for(UIView *item in pickerActionSheet.subviews)
-    {
-        if([item isKindOfClass:[UIDatePicker class]] || [item isKindOfClass:[UIPickerView class]])
-        {
-            [item removeFromSuperview];
-        }
-    }
-    [pickerActionSheet addSubview:dtPickerView];
+    
     dtPickerView.date = [CommonFunc dateFromStringShort:sender.titleLabel.text]; // 设置初始时间
     NSDictionary *item=[detailArray objectAtIndex:sender.tag];
     NSArray *subitem=[item objectForKey:@"选项"];
@@ -661,25 +693,40 @@ extern NSString *kInitURL;
         dtPickerView.minimumDate=minDate;
         dtPickerView.maximumDate=maxDate;
     }
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
-    [self presentViewController:alertController animated:YES completion:nil];
-#else
-    [pickerActionSheet showInView:[UIApplication sharedApplication].keyWindow];
-#endif
+    if(alertController)
+    {
+        for(UIView *item in alertController.view.subviews)
+        {
+            if([item isKindOfClass:[UIDatePicker class]] || [item isKindOfClass:[UIPickerView class]])
+            {
+                [item removeFromSuperview];
+            }
+        }
+        [alertController.view addSubview:dtPickerView];
+        [self presentViewController:alertController animated:YES completion:nil];
+        
+    }
+    
+    else
+    {
+        for(UIView *item in pickerActionSheet.subviews)
+        {
+            if([item isKindOfClass:[UIDatePicker class]] || [item isKindOfClass:[UIPickerView class]])
+            {
+                [item removeFromSuperview];
+            }
+        }
+
+        [pickerActionSheet addSubview:dtPickerView];
+        [pickerActionSheet showInView:[UIApplication sharedApplication].keyWindow];
+    }
     
 }
 
 -(void)popComboPicker:(UIButton *)sender
 {
     senderBtn=sender;
-    for(UIView *item in pickerActionSheet.subviews)
-    {
-        if([item isKindOfClass:[UIDatePicker class]] || [item isKindOfClass:[UIPickerView class]])
-        {
-            [item removeFromSuperview];
-        }
-    }
-    [pickerActionSheet addSubview:pickerView];
+   
 
     NSDictionary *item=[detailArray objectAtIndex:sender.tag];
     pickerArray=[item objectForKey:@"选项"];
@@ -687,8 +734,32 @@ extern NSString *kInitURL;
         pickerArray=[NSArray array];
     NSInteger index=[pickerArray indexOfObject:sender.titleLabel.text];
     [pickerView selectRow:index inComponent:0 animated:NO];
+    if(alertController)
+    {
+        for(UIView *item in alertController.view.subviews)
+        {
+            if([item isKindOfClass:[UIDatePicker class]] || [item isKindOfClass:[UIPickerView class]])
+            {
+                [item removeFromSuperview];
+            }
+        }
+        [alertController.view addSubview:pickerView];
+        [self presentViewController:alertController animated:YES completion:nil];
+        
+    }
     
-    [pickerActionSheet showInView:[UIApplication sharedApplication].keyWindow];
+    else
+    {
+        for(UIView *item in pickerActionSheet.subviews)
+        {
+            if([item isKindOfClass:[UIDatePicker class]] || [item isKindOfClass:[UIPickerView class]])
+            {
+                [item removeFromSuperview];
+            }
+        }
+        [pickerActionSheet addSubview:pickerView];
+        [pickerActionSheet showInView:[UIApplication sharedApplication].keyWindow];
+    }
 }
 
 #pragma mark 实现协议UIPickerViewDataSource方法
@@ -714,6 +785,10 @@ numberOfRowsInComponent:(NSInteger)component {
 {
     UITableViewCell *cell = [self tableView:tableView cellForRowAtIndexPath:indexPath];
     return cell.frame.size.height;
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    return 1;
 }
 - (void)didSelectedRadioButton:(QRadioButton *)radio groupId:(NSString *)groupId
 {
@@ -753,7 +828,7 @@ numberOfRowsInComponent:(NSInteger)component {
     [activeView resignFirstResponder];
 }
 
--(void)drawImageFromArray
+-(void)drawImageFromArray:(UITableViewCell *)parentCell curRow:(int)curRow top:(float)top
 {
     for(int i=0;i<5;i++)
     {
@@ -761,8 +836,13 @@ numberOfRowsInComponent:(NSInteger)component {
         if(subview)
             [subview removeFromSuperview];
     }
+    parentCell.contentView.tag=curRow;
     NSDictionary *item=[detailArray objectAtIndex:curRow];
     NSArray *photosArray=[item objectForKey:@"用户答案"];
+    NSString *hangshu=[item objectForKey:@"行数"];
+    int maxline=5;
+    if(hangshu!=nil && hangshu.intValue>0)
+        maxline=hangshu.intValue;
     int j=(int)photosArray.count;
     for(int i=0;i<j;i++)
     {
@@ -781,12 +861,14 @@ numberOfRowsInComponent:(NSInteger)component {
             NSURL *url = [NSURL URLWithString:urlStr];
             ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:url];
             request.username=@"下载图片";
-            request.userInfo=item;
             request.tag=100+i;
+            NSMutableDictionary *newdic=[NSMutableDictionary dictionaryWithDictionary:item];
+            [newdic setObject:parentCell forKey:@"parentCell"];
+            request.userInfo=newdic;
+
             UIActivityIndicatorView *aiv=[[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(10, 10, 30, 30)];
             aiv.activityIndicatorViewStyle=UIActivityIndicatorViewStyleGray;
             [selBtn addSubview:aiv];
-            
             [request setDelegate:self];
             [request startAsynchronous];
             [requestArray addObject:request];
@@ -800,7 +882,7 @@ numberOfRowsInComponent:(NSInteger)component {
         [selBtn addTarget:self action:@selector(addPhotoClick:) forControlEvents:UIControlEventTouchUpInside];
         [parentCell.contentView addSubview:selBtn];
     }
-    if(j<5 && enabled)
+    if(j<maxline && enabled)
     {
         UIButton *selBtn=[[UIButton alloc]initWithFrame:CGRectMake(15+j*60, top, 50, 50)];
         [selBtn setImage:addPhoto forState:UIControlStateNormal];
@@ -814,9 +896,58 @@ numberOfRowsInComponent:(NSInteger)component {
     }
     
 }
+-(float)drawFujianFromArray:(UITableViewCell *)parentCell curRow:(int)curRow top:(float) top
+{
+    for(int i=0;i<10;i++)
+    {
+        UIView *subview=[parentCell.contentView viewWithTag:100+i];
+        if(subview)
+            [subview removeFromSuperview];
+    }
+    parentCell.contentView.tag=curRow;
+    NSDictionary *item=[detailArray objectAtIndex:curRow];
+    NSArray *photosArray=[item objectForKey:@"用户答案"];
+    NSNumber *lines=[item objectForKey:@"行数"];
+    if(lines==nil || lines.intValue>10)
+        lines=[NSNumber numberWithInt:10];
+    int j=(int)photosArray.count;
+    for(int i=0;i<j;i++)
+    {
+        UIButton *selBtn=[[UIButton alloc]initWithFrame:CGRectMake(15, top+i*30, parentCell.bounds.size.width-30, 25)];
+        selBtn.contentHorizontalAlignment=UIControlContentHorizontalAlignmentLeft;
+        selBtn.titleEdgeInsets=UIEdgeInsetsMake(0, 10, 0, 0);
+        [selBtn setTitleColor:selBtn.tintColor forState:UIControlStateNormal];
+        selBtn.titleLabel.font=[UIFont systemFontOfSize:15];
+        NSDictionary *item=[photosArray objectAtIndex:i];
+        NSString *filename=[item objectForKey:@"name"];
+        
+        [selBtn setTitle:filename forState:UIControlStateNormal];
+        [selBtn addTarget:self action:@selector(addPhotoClick:) forControlEvents:UIControlEventTouchUpInside];
+        selBtn.tag=100+i;
+        [parentCell.contentView addSubview:selBtn];
+        
+    }
+    
+    if(j<lines.intValue && enabled)
+    {
+        UIButton *selBtn=[[UIButton alloc]initWithFrame:CGRectMake(15, top+j*30, parentCell.bounds.size.width-30, 25)];
+        [selBtn setTitle:@"添加附件" forState:UIControlStateNormal];
+        selBtn.titleLabel.font=[UIFont systemFontOfSize:15];
+        [selBtn setTitleColor:selBtn.tintColor forState:UIControlStateNormal];
+        selBtn.contentHorizontalAlignment=UIControlContentHorizontalAlignmentLeft;
+        selBtn.titleEdgeInsets=UIEdgeInsetsMake(0, 10, 0, 0);
+        selBtn.tag=100+j;
+        [selBtn addTarget:self action:@selector(addPhotoClick:) forControlEvents:UIControlEventTouchUpInside];
+        [parentCell.contentView addSubview:selBtn];
+        j++;
+    }
+    return j*30;
+}
+
 -(void)addPhotoClick:(UIButton *)sender
 {
-    if([sender.imageView.image isEqual:addPhoto])
+    curRowIndex=(int)sender.superview.tag;
+    if([sender.imageView.image isEqual:addPhoto] || [sender.titleLabel.text isEqualToString:@"添加附件"])
     {
         UIActionSheet* actionSheet = [[UIActionSheet alloc]
                                       initWithTitle:nil
@@ -884,7 +1015,7 @@ numberOfRowsInComponent:(NSInteger)component {
         switch (buttonIndex) {
             case 0://删除
             {
-                NSDictionary *item=[detailArray objectAtIndex:curRow];
+                NSDictionary *item=[detailArray objectAtIndex:curRowIndex];
                 NSArray *photosArray=[item objectForKey:@"用户答案"];
                 NSDictionary *subitem=[photosArray objectAtIndex:actionSheet.tag-100];
                 [self deleteRemoteFile:subitem];
@@ -904,6 +1035,9 @@ numberOfRowsInComponent:(NSInteger)component {
 -(void) deleteRemoteFile:(NSDictionary *)item
 {
     NSString *filename=[item objectForKey:@"文件名"];
+    if(filename==nil || filename.length==0)
+        filename=[item objectForKey:@"newname"];
+    
     NSMutableDictionary *dic=[[NSMutableDictionary alloc] init];
     [dic setObject:kUserIndentify forKey:@"用户较验码"];
     NSNumber *timeStamp=[[NSNumber alloc] initWithLong:[[NSDate new] timeIntervalSince1970]];
@@ -970,28 +1104,38 @@ numberOfRowsInComponent:(NSInteger)component {
     request.timeOutSeconds=300;
     [request startAsynchronous];
     [requestArray addObject:request];
-    NSDictionary *item=[detailArray objectAtIndex:curRow];
-    NSArray *photosArray=[item objectForKey:@"用户答案"];
-    UIButton *btn=(UIButton *)[parentCell.contentView viewWithTag:photosArray.count+100];
-    if(btn)
+    NSDictionary *item=[detailArray objectAtIndex:curRowIndex];
+    if([[item objectForKey:@"类型"] isEqualToString:@"附件"])
     {
-        if(rpv)
-            [rpv removeFromSuperview];
-        else
+        alertTip = [[OLGhostAlertView alloc] initWithTitle:@"正在上传附件..." message:nil timeout:0 dismissible:NO];
+        [alertTip showInView:self.view];
+    }
+    else
+    {
+        NSIndexPath *indexpath=[NSIndexPath indexPathForRow:0 inSection:curRowIndex];
+        UITableViewCell *parentCell=[self.tableView cellForRowAtIndexPath:indexpath];
+        NSArray *photosArray=[item objectForKey:@"用户答案"];
+        UIButton *btn=(UIButton *)[parentCell.contentView viewWithTag:photosArray.count+100];
+        if(btn)
         {
-            MDRadialProgressTheme *newTheme = [[MDRadialProgressTheme alloc] init];
-            newTheme.completedColor = [UIColor colorWithRed:90/255.0 green:212/255.0 blue:39/255.0 alpha:1.0];
-            newTheme.incompletedColor = [UIColor colorWithRed:164/255.0 green:231/255.0 blue:134/255.0 alpha:1.0];
-            newTheme.centerColor = [UIColor clearColor];
-            newTheme.centerColor = [UIColor colorWithRed:224/255.0 green:248/255.0 blue:216/255.0 alpha:1.0];
-            newTheme.sliceDividerHidden = YES;
-            newTheme.labelColor = [UIColor blackColor];
-            newTheme.labelShadowColor = [UIColor whiteColor];
-            rpv = [[MDRadialProgressView alloc] initWithFrame:CGRectMake(0, 0, 50, 50) andTheme:newTheme];
+            if(rpv)
+                [rpv removeFromSuperview];
+            else
+            {
+                MDRadialProgressTheme *newTheme = [[MDRadialProgressTheme alloc] init];
+                newTheme.completedColor = [UIColor colorWithRed:90/255.0 green:212/255.0 blue:39/255.0 alpha:1.0];
+                newTheme.incompletedColor = [UIColor colorWithRed:164/255.0 green:231/255.0 blue:134/255.0 alpha:1.0];
+                newTheme.centerColor = [UIColor clearColor];
+                newTheme.centerColor = [UIColor colorWithRed:224/255.0 green:248/255.0 blue:216/255.0 alpha:1.0];
+                newTheme.sliceDividerHidden = YES;
+                newTheme.labelColor = [UIColor blackColor];
+                newTheme.labelShadowColor = [UIColor whiteColor];
+                rpv = [[MDRadialProgressView alloc] initWithFrame:CGRectMake(0, 0, 50, 50) andTheme:newTheme];
+            }
+            rpv.progressTotal = 100;
+            rpv.progressCounter = 0;
+            [btn addSubview:rpv];
         }
-        rpv.progressTotal = 100;
-        rpv.progressCounter = 0;
-        [btn addSubview:rpv];
     }
     
 }
@@ -1004,12 +1148,14 @@ numberOfRowsInComponent:(NSInteger)component {
     
     DDIPictureBrows *browserView = [[DDIPictureBrows alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     NSMutableArray *picArray=[NSMutableArray array];
-    NSDictionary *item=[detailArray objectAtIndex:curRow];
+    NSDictionary *item=[detailArray objectAtIndex:curRowIndex];
     NSArray *photosArray=[item objectForKey:@"用户答案"];
     for(int i=0;i<photosArray.count;i++)
     {
         NSDictionary *item=[photosArray objectAtIndex:i];
         NSString *filename=[item objectForKey:@"文件名"];
+        if(filename==nil || filename.length==0)
+            filename=[item objectForKey:@"newname"];
         filename=[savePath stringByAppendingString:filename];
         if([CommonFunc fileIfExist:filename])
         {

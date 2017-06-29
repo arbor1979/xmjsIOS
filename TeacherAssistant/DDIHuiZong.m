@@ -9,6 +9,7 @@
 #import "DDIHuiZong.h"
 extern NSString *kInitURL;//默认单点webServic
 extern NSString *kUserIndentify;//用户登录后的唯一识别码
+extern NSDictionary *teacherInfoDic;
 extern DDIDataModel *datam;
 @interface DDIHuiZong ()
 
@@ -47,7 +48,32 @@ extern DDIDataModel *datam;
     [tabItem3 getLinkManGroup];
     
     TabBarView.selectedViewController=self;
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(getAlbumUnreadCount)
+                                                 name:@"newAlbumMessage"
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(loadTitleData)
+                                                 name:@"reloadNotice"
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(updateBadge)
+                                                 name:@"updateBadge"
+                                               object:nil];
+    [self getAlbumUnreadCount];
 
+}
+-(void)getAlbumUnreadCount
+{
+    UITabBarItem *baritem=[self.tabBarController.tabBar.items objectAtIndex:4];
+    int msgcount=(int)[datam getAlbumUnreadCount:[teacherInfoDic objectForKey:@"用户唯一码"]];
+    if(msgcount>0)
+        baritem.badgeValue=[NSString stringWithFormat:@"%d",(msgcount>99?99:msgcount)];
+    else
+        baritem.badgeValue=nil;
+    
+    
 }
 -(void) mainMenuAction
 {
@@ -72,6 +98,7 @@ extern DDIDataModel *datam;
     postStr=[GTMBase64 base64StringBystring:postStr];
     [request setPostValue:postStr forKey:@"DATA"];
     [request setDelegate:self];
+    request.timeOutSeconds=300;
     [request startAsynchronous];
     [requestArray addObject:request];
     
@@ -100,8 +127,10 @@ extern DDIDataModel *datam;
 -(void)viewWillAppear:(BOOL)animated
 {
     self.parentViewController.navigationItem.title=self.title;
+    [self updateBadge];
     if(needCount)
         [self getUnreadFromServer];
+    [super viewWillAppear:animated];
 }
 -(void)dealloc
 {
@@ -109,6 +138,9 @@ extern DDIDataModel *datam;
     {
         [req clearDelegatesAndCancel];
     }
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"newAlbumMessage" object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"reloadNotice" object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"updateBadge" object:nil];
 }
 - (void)didReceiveMemoryWarning
 {
@@ -186,11 +218,11 @@ extern DDIDataModel *datam;
             NSArray *newsList=[dict objectForKey:@"通知项"];
             NSDictionary *olddic=request.userInfo;
             NSString *newsType=[olddic objectForKey:@"文字"];
-            NSString *interface=[olddic objectForKey:@"接口地址"];
+            //NSString *interface=[olddic objectForKey:@"接口地址"];
             for(NSDictionary *item in newsList)
             {
                 NSMutableDictionary *newItem=[NSMutableDictionary dictionaryWithDictionary:item];
-                NSString *newUrl=[NSString stringWithFormat:@"%@%@",interface,[newItem objectForKey:@"最下边一行URL"]];
+                NSString *newUrl=[NSString stringWithFormat:@"%@",[newItem objectForKey:@"最下边一行URL"]];
                 [newItem setObject:newUrl forKey:@"最下边一行URL"];
                 [newItem setObject:kUserIndentify forKey:@"用户唯一码"];
                 [datam insertNewsRecord:newItem newsType:newsType];
@@ -228,7 +260,8 @@ extern DDIDataModel *datam;
             NSString *newsType=[item objectForKey:@"文字"];
             NSString *unreadStr=[unreadDic objectForKey:newsType];
             int unread=unreadStr.intValue;
-            if(unread>0)
+            NSString *oldunreadStr=[item objectForKey:@"未读"];
+            if(unread!=oldunreadStr.intValue)
             {
                 allUnread=allUnread+unread;
                 [item setObject:[NSNumber numberWithInt:unread] forKey:@"未读"];
@@ -408,6 +441,7 @@ extern DDIDataModel *datam;
     [request setPostValue:postStr forKey:@"DATA"];
     [request setDelegate:self];
     request.username=@"获取新闻";
+    request.timeOutSeconds=60;
     request.userInfo=item;
     [request startAsynchronous];
     [requestArray addObject:request];

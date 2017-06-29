@@ -11,6 +11,8 @@ extern NSString *kInitURL;//默认单点webServic
 extern NSString *kUserIndentify;//用户登录后的唯一识别码
 extern NSMutableDictionary *teacherInfoDic;//老师数据
 extern int kUserType;
+extern Boolean kIOS7;
+extern NSMutableDictionary *userInfoDic;
 @interface DDIKaoQinTitle ()
 
 @end
@@ -31,12 +33,20 @@ extern int kUserType;
     self.searchView.layer.borderWidth =1.0;
     self.searchView.layer.cornerRadius =5.0;
     
+    if(!kIOS7)
+    {
+        [_segWeekOrMonth.layer setBorderColor:[UIColor colorWithWhite:0 alpha:0.8].CGColor];
+        [_segWeekOrMonth.layer setBorderWidth:1.0f];
+        [_segWeekOrMonth.layer setCornerRadius:4.0f];
+        [_segWeekOrMonth.layer setMasksToBounds:YES];
+    }
     NSString *weiyima=[teacherInfoDic objectForKey:@"用户唯一码"];
     if(kUserType==1)
     {
         self.lblName.text=[teacherInfoDic objectForKey:@"姓名"];
         self.lblXuehao.text=[NSString stringWithFormat:@"用户类型:%@",[teacherInfoDic objectForKey:@"用户类型"]];
         self.lblBanji.text=[NSString stringWithFormat:@"部门:%@",[teacherInfoDic objectForKey:@"部门"]];
+        self.thirdviewheight.constant=0;
     }
     else
     {
@@ -72,7 +82,7 @@ extern int kUserType;
     
     UINavigationBar *navBar = [[UINavigationBar alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 40)];
     //[navBar setBackgroundImage:nil forBarMetrics:UIBarMetricsDefault];
-    UINavigationItem *navItem = [[UINavigationItem alloc] initWithTitle:nil];
+    UINavigationItem *navItem = [[UINavigationItem alloc] initWithTitle:@""];
     UIBarButtonItem *leftButton = [[UIBarButtonItem alloc] initWithTitle:@"取消" style:UIBarButtonItemStyleBordered target:self action:@selector(docancel)];
     navItem.leftBarButtonItem = leftButton;
     UIBarButtonItem *rightButton = [[UIBarButtonItem alloc] initWithTitle:@"确定" style:UIBarButtonItemStyleDone target:self action:@selector(done)];
@@ -86,13 +96,15 @@ extern int kUserType;
     
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
     
-    
-    alertController = [UIAlertController alertControllerWithTitle:@"\n\n\n\n\n\n\n\n\n\n" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
-    pickerView.frame=CGRectMake(0, 40, alertController.view.bounds.size.width-16, 120);
-    navBar.frame=CGRectMake(0, 0, alertController.view.bounds.size.width-16, 40);
-    
-    [alertController.view addSubview:navBar];
-    [alertController.view addSubview:pickerView];
+    if([[[UIDevice currentDevice]systemVersion] floatValue] >=8.0)
+    {
+        alertController = [UIAlertController alertControllerWithTitle:@"\n\n\n\n\n\n\n\n\n\n" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+        pickerView.frame=CGRectMake(0, 40, alertController.view.bounds.size.width-16, 120);
+        navBar.frame=CGRectMake(0, 0, alertController.view.bounds.size.width-16, 40);
+        
+        [alertController.view addSubview:navBar];
+        [alertController.view addSubview:pickerView];
+    }
     
 #endif
 }
@@ -113,6 +125,9 @@ extern int kUserType;
     [dic setObject:kUserIndentify forKey:@"用户较验码"];
     NSNumber *timeStamp=[[NSNumber alloc] initWithLong:[[NSDate new] timeIntervalSince1970]];
     [dic setObject:timeStamp forKey:@"DATETIME"];
+    [dic setObject:[userInfoDic objectForKey:@"当前学期"] forKey:@"当前学期"];
+    [dic setObject:[userInfoDic objectForKey:@"当前周次"] forKey:@"当前周"];
+
     request.username=@"初始化标题";
     NSData *postData=[NSJSONSerialization dataWithJSONObject:dic options:NSJSONWritingPrettyPrinted error:&error];
     NSString *postStr = [[NSString alloc] initWithData:postData encoding:NSUTF8StringEncoding];
@@ -233,6 +248,9 @@ extern int kUserType;
         [self loadImageAndSave:bgChuqin parentView:btn];
         btn.titleLabel.text=[NSString stringWithFormat:@"%@&Week1=%d&Week2=%d",[item objectForKey:@"内容项URL"],num1.intValue,num2.intValue];
         btn.tag=100+i;
+        CGRect frame=btn.frame;
+        frame.size.width=self.view.frame.size.width/2-15;
+        [btn setFrame:frame];
         NSString *iconChuqin=[item objectForKey:@"考勤图标"];
         UIImageView *iv=[self.imgChuqins objectAtIndex:i];
         [self loadImageAndSave:iconChuqin parentView:iv];
@@ -240,7 +258,7 @@ extern int kUserType;
         value.text=[NSString stringWithFormat:@"%@",[item objectForKey:@"值"]];
         UILabel *itemName=[self.lblItemName objectAtIndex:i];
         itemName.text=[item objectForKey:@"名称"];
-        if(i==3) break;
+        if(i==5) break;
     }
     
 }
@@ -337,11 +355,10 @@ extern int kUserType;
     detial.interfaceUrl=urlStr;
 }
 - (void) done{
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
-    [alertController dismissViewControllerAnimated:YES completion:nil];
-#else
-    [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
-#endif
+    if(alertController)
+        [alertController dismissViewControllerAnimated:YES completion:nil];
+    else
+        [actionSheet dismissWithClickedButtonIndex:0 animated:YES];
     
     
     NSInteger row1 = [pickerView selectedRowInComponent:0];
@@ -358,11 +375,10 @@ extern int kUserType;
 }
 
 - (void) docancel{
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
-    [alertController dismissViewControllerAnimated:YES completion:nil];
-#else
-    [actionSheet dismissWithClickedButtonIndex:1 animated:YES];
-#endif
+    if(alertController)
+        [alertController dismissViewControllerAnimated:YES completion:nil];
+    else
+        [actionSheet dismissWithClickedButtonIndex:1 animated:YES];
     
     
 }
@@ -410,11 +426,10 @@ numberOfRowsInComponent:(NSInteger)component {
     [pickerView selectRow:row1 inComponent:0 animated:NO];
     [pickerView selectRow:row2 inComponent:2 animated:NO];
     
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
-    [self presentViewController:alertController animated:YES completion:nil];
-#else
-    [actionSheet showInView:[UIApplication sharedApplication].keyWindow];
-#endif
+    if(alertController)
+        [self presentViewController:alertController animated:YES completion:nil];
+    else
+        [actionSheet showInView:[UIApplication sharedApplication].keyWindow];
     
 }
 -(IBAction)segmentAction:(UISegmentedControl *)Seg

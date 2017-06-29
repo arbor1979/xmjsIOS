@@ -13,9 +13,11 @@
 #import "LFCGzipUtillity.h"
 #import "UIImage+Scale.h"
 #import "OLGhostAlertView.h"
-@interface DDIClassAttend : UIViewController <UITableViewDataSource,UITableViewDelegate>
+@interface DDIClassAttend : UIViewController <UITableViewDataSource,UITableViewDelegate,NSURLConnectionDelegate>
 {
     UIBarButtonItem *rightBtn;
+    NSFileManager *fileManager;
+    NSString *curJieci;
 }
 @property (strong,nonatomic) NSString *banjiName;
 @property (strong,nonatomic) NSString *classNo;
@@ -25,12 +27,11 @@
 
 @property (strong,nonatomic) NSMutableArray *scheduleArray; //上课记录
 @property (strong,nonatomic) NSMutableDictionary *classInfoDic;//本节课信息
-@property (strong,nonatomic) NSMutableDictionary *studentDic;  //本班学生信息
+@property (strong,nonatomic) NSMutableArray *studentArray;  //本班学生信息
 @property (strong,nonatomic) NSMutableArray *stuKaoQinArray; //本班学生本节课缺勤记录
 @property (strong,nonatomic) NSMutableDictionary *headImageDic;
 
-@property (strong,nonatomic) NSArray *sectionArray;     //姓名第一个字母
-@property (strong,nonatomic) NSArray *kaoqinNameArray;//考勤名称数组
+@property (strong,nonatomic) NSMutableArray *kaoqinNameArray;//考勤名称数组
 
 
 @property (strong,nonatomic) NSMutableArray *imageSel; //绿色选中图片

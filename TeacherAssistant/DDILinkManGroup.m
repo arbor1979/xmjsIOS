@@ -16,6 +16,7 @@ extern NSDictionary *LinkMandic;//联系人数据
 extern int kUserType;
 extern NSMutableDictionary *lastMsgDic;
 extern DDIDataModel *datam;
+extern NSMutableDictionary *cacheImageDic;
 @interface DDILinkManGroup ()
 
 @end
@@ -27,12 +28,11 @@ extern DDIDataModel *datam;
     [super viewDidLoad];
     arrayRight=[UIImage imageNamed:@"arrowRight"];
     arrayDown=[UIImage imageNamed:@"arrowDown"];
-    imageMan=[UIImage imageNamed:@"defaultPerson"];
-    imageWoman=[UIImage imageNamed:@"defaultWoman"];
+    imageMan=[UIImage imageNamed:@"man"];
+    imageWoman=[UIImage imageNamed:@"woman"];
     greenTel=[UIImage imageNamed:@"greenTel"];
     hostUser=[teacherInfoDic objectForKey:@"用户唯一码"];
     
-    imageArray=[[NSMutableDictionary alloc]init];
     friendDic=[[NSMutableDictionary alloc]init];
     requestArray=[[NSMutableArray alloc]init];
     
@@ -78,7 +78,7 @@ extern DDIDataModel *datam;
         NSDictionary *duizhaoDic=[LinkMandic objectForKey:@"数据源_用户信息列表_对照表"];
         NSArray *allLinkManArray=[LinkMandic objectForKey:@"数据源_用户信息列表"];
         [friendDic removeAllObjects];
-        NSArray *sortDescriptors = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"拼音" ascending:YES]];
+        //NSArray *sortDescriptors = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"拼音" ascending:YES]];
         for(int i=0;i<groupArray.count;i++)
         {
             NSString *groupName=[groupArray objectAtIndex:i];
@@ -99,7 +99,7 @@ extern DDIDataModel *datam;
                 [manDic setObject:userId forKey:@"用户唯一码"];
                 [item addObject:manDic];
             }
-            [item sortUsingDescriptors:sortDescriptors];
+            //[item sortUsingDescriptors:sortDescriptors];
             [friendDic setObject:item forKey:groupName];
         }
     }
@@ -111,13 +111,15 @@ extern DDIDataModel *datam;
 -(void)viewWillAppear:(BOOL)animated
 {
     self.parentViewController.navigationItem.title=@"联系人";
+    [super viewWillAppear:animated];
 }
 -(void)viewDidAppear:(BOOL)animated
 {
     if(lastMsgDic==nil && kUserIndentify)
     {
-        [self getLastMsgDic];
+        //[self getLastMsgDic];
     }
+    [super viewDidAppear:animated];
 }
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
@@ -143,25 +145,41 @@ extern DDIDataModel *datam;
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier];
     if (cell == nil)
     {
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellIdentifier];
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
         if(kIOS7)
             cell.separatorInset=UIEdgeInsetsMake(0, 0, 0, 0);
+
         //cell.imageView.layer.cornerRadius = 5;
         //cell.imageView.layer.masksToBounds = YES;
+        
         UIButton *action = [[UIButton alloc] initWithFrame:CGRectMake(320-60, 0, 60, 44)];
         action.titleLabel.tag=indexPath.section;
         //action.backgroundColor=[UIColor grayColor];
         [action addTarget:self action:@selector(detailButtonClicked:) forControlEvents:UIControlEventTouchUpInside];
         //cell.accessoryType=UITableViewCellAccessoryDetailButton;
         cell.accessoryView=action;
-        [cell.imageView setUserInteractionEnabled:YES];
-        UIButton *btn=[[UIButton alloc]initWithFrame:CGRectMake(0, 0, 40, 40)];
+
+        UIButton *btn=[[UIButton alloc]initWithFrame:CGRectMake(10, 4, 40, 40)];
         //btn.backgroundColor=[UIColor grayColor];
         btn.tag=11;
         [btn addTarget:self action:@selector(headBtnClick:) forControlEvents:UIControlEventTouchUpInside];
-        [cell.imageView addSubview:btn];
-        [cell.imageView.layer setMasksToBounds:YES];
-        [cell.imageView.layer setCornerRadius:5.0];
+        [cell addSubview:btn];
+        [btn.layer setMasksToBounds:YES];
+        [btn.layer setCornerRadius:5.0];
+        
+        UILabel *lbName=[[UILabel alloc]initWithFrame:CGRectMake(60, 10, 160, 30)];
+        lbName.tag=12;
+        lbName.font=[UIFont boldSystemFontOfSize:18];
+        lbName.backgroundColor=[UIColor clearColor];
+        [cell addSubview:lbName];
+        UILabel *lblastMsg=[[UILabel alloc]initWithFrame:CGRectMake(60, 25, 200, 20)];
+        lblastMsg.tag=13;
+        lblastMsg.font=[UIFont boldSystemFontOfSize:12];
+        lblastMsg.backgroundColor=[UIColor clearColor];
+        lblastMsg.textColor=[UIColor grayColor];
+        [cell addSubview:lblastMsg];
+        [cell addSubview:lbName];
+        
     }
     NSDictionary *linkman=nil;
     if(tableView==self.mTableView.tableView)
@@ -181,24 +199,29 @@ extern DDIDataModel *datam;
     if(tel==nil)
         tel=[linkman objectForKey:@"学生电话"];
     
-    cell.detailTextLabel.text=@"";
-    if(lastMsgDic && lastMsgDic.count>0)
+    UILabel *lblastMsg=(UILabel *)[cell viewWithTag:13];
+    UILabel *lbName=(UILabel *)[cell viewWithTag:12];
+    
+    if([[linkman objectForKey:@"用户类型"] isEqualToString:@"学生"])
     {
-        NSDictionary *item=[lastMsgDic objectForKey:userid];
-        if(item)
-        {
-            NSDictionary *lastMsg=[item objectForKey:@"最后一次聊天记录"];
-
-            if([lastMsg objectForKey:@"TYPE"]==nil || [[lastMsg objectForKey:@"TYPE"] isEqualToString:@"txt"])
-                cell.detailTextLabel.text=([[lastMsg objectForKey:@"CONTENT"] isEqual:[NSNull null]]?@"":[lastMsg objectForKey:@"CONTENT"]);
-            else
-                cell.detailTextLabel.text=@"[图片]";
-        }
+        CGRect frame=lbName.frame;
+        frame.origin.y=0;
+        lbName.frame=frame;
+        lblastMsg.hidden=NO;
+        lblastMsg.text=[NSString stringWithFormat:@"座号:%@",[linkman objectForKey:@"座号"]];
     }
-
-    cell.textLabel.text=userName;
-    UIButton *btn=(UIButton *)[cell.imageView viewWithTag:11];
-    btn.titleLabel.text=userid;
+    else
+    {
+        lblastMsg.hidden=YES;
+        CGRect frame=lbName.frame;
+        frame.origin.y=10;
+        lbName.frame=frame;
+    }
+    
+    lbName.text=userName;
+    //cell.textLabel.text=userName;
+    UIButton *headBtn=(UIButton *)[cell viewWithTag:11];
+    headBtn.titleLabel.text=userid;
     
     UIButton *callBtn=(UIButton *)cell.accessoryView;
     if(tel.length==11 && kUserType==1)
@@ -213,25 +236,38 @@ extern DDIDataModel *datam;
         [callBtn setImage:nil forState:UIControlStateNormal];
     }
     
-    UIImage *img=[imageArray objectForKey:userid];
+    UIImage *img;
     if (img==Nil)
     {
-        NSString *userPic=[CommonFunc getImageSavePath:userid ifexist:YES];
-        
-        if(userPic)
+        NSString *userPic=[CommonFunc getCacheImagePath:picUrl];
+        if(userPic!=nil && userPic.length>0)
         {
             UIImage *headImage=[UIImage imageWithContentsOfFile:userPic];
-            CGSize newSize=CGSizeMake(40, 40);
-            headImage=[headImage scaleToSize1:newSize];
-            headImage=[headImage cutFromImage:CGRectMake(0, 0, 40, 40)];
-            [imageArray setObject:headImage forKey:userid];
-            cell.imageView.image=headImage;
-        }
-        else
-        {
-            if(picUrl && picUrl.length>0)
+            if(headImage)
             {
-                NSURL *url = [NSURL URLWithString:picUrl];
+                CGSize newSize=CGSizeMake(80, 80);
+                headImage=[headImage scaleToSize1:newSize];
+                headImage=[headImage cutFromImage:CGRectMake(0, 0, 80, 80)];
+                img=headImage;
+            }
+        }
+    }
+    if(img==nil)
+    {
+        if(picUrl && picUrl.length>0)
+        {
+            NSURL *url = [NSURL URLWithString:picUrl];
+            BOOL flag=false;
+            for(ASIHTTPRequest *item in requestArray)
+            {
+                if([item.url isEqual:url])
+                {
+                    flag=true;
+                    break;
+                }
+            }
+            if(!flag)
+            {
                 ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:url];
                 request.username=userid;
                 NSMutableDictionary *indexDic=[[NSMutableDictionary alloc]init];
@@ -241,17 +277,14 @@ extern DDIDataModel *datam;
                 [request startAsynchronous];
                 [requestArray addObject:request];
             }
-            if([sex isEqualToString:@"女"])
-                cell.imageView.image=imageWoman;
-            else
-                cell.imageView.image=imageMan;
         }
-    }
-    else
-    {
-        cell.imageView.image=img;
+        if([sex isEqualToString:@"女"])
+            img=imageWoman;
+        else
+            img=imageMan;
         
     }
+    [headBtn setImage:img forState:UIControlStateNormal];
 
     return cell;
 }
@@ -279,10 +312,11 @@ extern DDIDataModel *datam;
         parent=[parent superview];
     UITableView *tableView=(UITableView *)parent;
     
-    NSIndexPath *indexPath=[self.mTableView indexPathForCell:cell];
+    NSIndexPath *indexPath=[tableView indexPathForCell:cell];
     NSDictionary *linkman=nil;
     if(tableView==self.mTableView.tableView)
     {
+        
         NSArray *linkManOfGroup=[friendDic objectForKey:groupArray[indexPath.section]];
         linkman=[linkManOfGroup objectAtIndex:indexPath.row];
     }
@@ -387,6 +421,8 @@ extern DDIDataModel *datam;
         UIButton *btn=(UIButton *)sender;
         DDIMyInforView *view=segue.destinationViewController;
         view.userWeiYi=btn.titleLabel.text;
+        if(btn.imageView.image)
+            view.headImage=btn.imageView.image;
     }else if([segue.identifier isEqualToString:@"theStudentInfor"])
     {
         UIButton *btn=(UIButton *)sender;
@@ -447,7 +483,7 @@ extern DDIDataModel *datam;
            [alertTip removeFromSuperview];
         NSData *data = [request responseData];
         NSString* dataStr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-        NSData *_decodedData   = [[NSData alloc] initWithBase64Encoding:dataStr];
+        NSData *_decodedData   = [[NSData alloc] initWithBase64EncodedString:dataStr options:0];
         NSData *upzipData = [LFCGzipUtillity uncompressZippedData:_decodedData];
         dataStr = [[NSString alloc] initWithData:upzipData encoding:NSUTF8StringEncoding];
         
@@ -525,17 +561,28 @@ extern DDIDataModel *datam;
         {
             NSString *path=[CommonFunc getImageSavePath:request.username ifexist:NO];
             [datas writeToFile:path atomically:YES];
-            headImage=[headImage scaleToSize1:CGSizeMake(40, 40)];
-            CGRect newSize=CGRectMake(0, 0,40,40);
+            headImage=[headImage scaleToSize1:CGSizeMake(80, 80)];
+            CGRect newSize=CGRectMake(0, 0,80,80);
             headImage=[headImage cutFromImage:newSize];
-            [imageArray setObject:headImage forKey:request.username];
             NSDictionary *indexDic=request.userInfo;
             NSIndexPath *indexPath=[indexDic objectForKey:@"indexPath"];
+            [CommonFunc setCacheImagePath:request.url.absoluteString localPath:path];
+
             UITableViewCell *cell=[self.mTableView cellForRowAtIndexPath:indexPath];
             if(cell)
                 [self.mTableView reloadDataWithTableViewCell:cell];
+            
         }
     }
+    if([requestArray containsObject:request])
+        [requestArray removeObject:request];
+    request=nil;
+}
+- (void)requestFailed:(ASIHTTPRequest *)request
+{
+
+    NSError *error = [request error];
+    NSLog(@"请求失败:%@",[error localizedDescription]);
     if([requestArray containsObject:request])
         [requestArray removeObject:request];
     request=nil;

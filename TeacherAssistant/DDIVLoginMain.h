@@ -16,6 +16,7 @@
 #import "DDIDataModel.h"
 #import "UIPopoverListView.h"
 #import "XHDrawerController.h"
+#import "OLGhostAlertView.h"
 @interface DDIVLoginMain : UIViewController <UITextFieldDelegate,NSURLConnectionDelegate,UIAlertViewDelegate,UIPopoverListViewDelegate,UIPopoverListViewDataSource>
 {
     NSMutableArray *userListArray;

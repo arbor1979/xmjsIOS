@@ -21,6 +21,7 @@
     UIBarButtonItem *rightBtn;
     OLGhostAlertView *alertTip;
     UIProgressView *uploadProgress;
+  
 }
 @property (strong,nonatomic) NSString *className;
 @property (strong,nonatomic) NSString *classNo;

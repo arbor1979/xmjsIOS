@@ -27,7 +27,7 @@
     UIImage *greenTel;
     
     NSString *hostUser;
-    NSMutableDictionary *imageArray;
+
     NSMutableDictionary *headViewArray;
     UIImage *imageMan;  //默认男生头像
     UIImage *imageWoman; //默认女生头像

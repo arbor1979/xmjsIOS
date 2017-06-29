@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-
+#import "sys/utsname.h"
 #define __BASE64( text )        [CommonFunc base64StringFromText:text]
 #define __TEXT( base64 )        [CommonFunc textFromBase64String:base64]
 
@@ -47,4 +47,17 @@
 +(BOOL)deleteFile:(NSString *)filePath;
 +(BOOL)writeToPlistFile:(NSString*)filename dic:(NSDictionary *)dic;
 +(NSDictionary *)readFromPlistFile:(NSString*)filename;
++(NSString *)getFileRealName:(NSString *)filePath;
++(BOOL)copyFile:(NSString *)scrFilePath toFile:(NSString *)toFilePath;
++(NSString *)getFileExeName:(NSString *)filePath;
++(NSString*)deviceString;
++(void) initSegmentOfIOS6;
++(UIImage *)imageWithColor:(UIColor *)color size:(CGSize)size;
++(NSString *)chatDateStr:(NSString *)dateStr;
++(UIViewController *)viewController:(UIView *)view;
++(NSArray *) emojiStringArray;
++(NSInteger) getweekDayWithDate:(NSDate *) date;
++(NSString *) getCacheImagePath:(NSString *)url;
++(void) setCacheImagePath:(NSString *)url localPath:(NSString *)localPath;
++(CGSize) getSizeByText:(NSString *)text width:(CGFloat)width font:(UIFont *)font;
 @end

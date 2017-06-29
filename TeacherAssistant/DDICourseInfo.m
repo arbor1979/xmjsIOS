@@ -36,41 +36,7 @@ extern NSString *kInitURL;
         NSString *userName=[item objectForKey:@"用户名"];
         if(userName && [userName isEqualToString:self.teacherUserName])
         {
-            self.teacherName.text=[item objectForKey:@"姓名"];
-            NSString *weiyima=[item objectForKey:@"用户唯一码"];
-            NSString *picUrl=[item objectForKey:@"用户头像"];
-            self.chargeClass.text=[item objectForKey:@"所带班级"];
-            self.chargeCourse.text=[item objectForKey:@"所带课程"];
-            
-            
-            NSString *userPic=[CommonFunc getImageSavePath:weiyima ifexist:YES];
-            UIImage *headImage;
-            if(userPic)
-            {
-                headImage=[UIImage imageWithContentsOfFile:userPic];
-                oldImage=headImage;
-                CGSize newSize=CGSizeMake(80, 80);
-                headImage=[headImage scaleToSize1:newSize];
-                headImage=[headImage cutFromImage:CGRectMake(0, 0, 80, 80)];
-                
-            }
-            else
-            {
-                headImage=[UIImage imageNamed:@"unknowMan"];
-                oldImage=headImage;
-                headImage=[headImage scaleToSize1:CGSizeMake(80, 80)];
-                if(picUrl && picUrl.length>0)
-                {
-                    NSURL *url = [NSURL URLWithString:picUrl];
-                    ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:url];
-                    request.username=weiyima;
-                    [request setDelegate:self];
-                    [request startAsynchronous];
-                    [requestArray addObject:request];
-                }
-                
-            }
-            [self.headBtn setImage:headImage forState:UIControlStateNormal];
+            [self loadteacherInfo:item];
             break;
         }
     }
@@ -115,6 +81,44 @@ extern NSString *kInitURL;
         }
     }
     */
+}
+-(void) loadteacherInfo:(NSDictionary *)item
+{
+    self.teacherName.text=[item objectForKey:@"姓名"];
+    NSString *weiyima=[item objectForKey:@"用户唯一码"];
+    NSString *picUrl=[item objectForKey:@"用户头像"];
+    self.chargeClass.text=[item objectForKey:@"所带班级"];
+    self.chargeCourse.text=[item objectForKey:@"所带课程"];
+    
+    NSString *userPic=[CommonFunc getImageSavePath:weiyima ifexist:YES];
+    UIImage *headImage;
+    if(userPic)
+    {
+        headImage=[UIImage imageWithContentsOfFile:userPic];
+        oldImage=headImage;
+        CGSize newSize=CGSizeMake(80, 80);
+        headImage=[headImage scaleToSize1:newSize];
+        headImage=[headImage cutFromImage:CGRectMake(0, 0, 80, 80)];
+        
+    }
+    else
+    {
+        headImage=[UIImage imageNamed:@"unknowMan"];
+        oldImage=headImage;
+        headImage=[headImage scaleToSize1:CGSizeMake(80, 80)];
+        if(picUrl && picUrl.length>0)
+        {
+            NSURL *url = [NSURL URLWithString:picUrl];
+            ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:url];
+            request.username=weiyima;
+            [request setDelegate:self];
+            [request startAsynchronous];
+            [requestArray addObject:request];
+        }
+        
+    }
+    [self.headBtn setImage:headImage forState:UIControlStateNormal];
+
 }
 -(void) getPingJiaData
 {
@@ -175,19 +179,100 @@ extern NSString *kInitURL;
                 UIImageView *iv=[self.courseGrade objectAtIndex:j];
                 iv.image=goldStar;
             }
-            self.courseContent.text=[dict objectForKey:@"授课内容"];
-            self.courseZuoYe.text=[dict objectForKey:@"课后作业"];
+            
+            [self loadteacherInfo:[dict objectForKey:@"老师介绍"]];
+            NSString *courseContent=[dict objectForKey:@"授课内容"];
+            //CGSize constraint =CGSizeMake(self.view.frame.size.width-112-10, 1000.0f);
+            //CGSize labelSize=[courseContent sizeWithFont:self.courseDate.font constrainedToSize:constraint  lineBreakMode:NSLineBreakByCharWrapping];
+            CGSize labelSize=[CommonFunc getSizeByText:courseContent width:self.view.frame.size.width-self.courseDate.frame.origin.x-10 font:self.courseDate.font];
+            CGRect rect=self.courseDate.frame;
+            rect.origin.y=12;
+            rect.size=labelSize;
+            UILabel *lb_courseContent=[[UILabel alloc]initWithFrame:rect];
+            lb_courseContent.text=courseContent;
+            lb_courseContent.tag=99;
+            lb_courseContent.font=[UIFont systemFontOfSize:14];
+            lb_courseContent.numberOfLines=0;
+            lb_courseContent.lineBreakMode=NSLineBreakByCharWrapping;
+            [self.photosView addSubview:lb_courseContent];
+            
+            NSString *zuoyeContent=[dict objectForKey:@"课后作业"];
+            //constraint =CGSizeMake(self.view.frame.size.width-112-10, 1000.0f);
+            //CGSize labelSize1=[zuoyeContent sizeWithFont:self.courseDate.font constrainedToSize:constraint  lineBreakMode:NSLineBreakByCharWrapping];
+            CGSize labelSize1=[CommonFunc getSizeByText:zuoyeContent width:self.view.frame.size.width-self.courseDate.frame.origin.x-10 font:self.courseDate.font];
+            rect=self.courseDate.frame;
+            rect.origin.y=12;
+            rect.size=labelSize1;
+            UILabel *lb_zuoyeContent=[[UILabel alloc]initWithFrame:rect];
+            lb_zuoyeContent.text=zuoyeContent;
+            lb_zuoyeContent.tag=99;
+            lb_zuoyeContent.font=[UIFont systemFontOfSize:14];
+            lb_zuoyeContent.numberOfLines=0;
+            lb_zuoyeContent.lineBreakMode=NSLineBreakByCharWrapping;
+            [self.photosView1 addSubview:lb_zuoyeContent];
+            
+            NSString *summaryContent=[dict objectForKey:@"课堂情况简要"];
+            //constraint =CGSizeMake(self.view.frame.size.width-112-10, 1000.0f);
+            //CGSize labelSize1=[zuoyeContent sizeWithFont:self.courseDate.font constrainedToSize:constraint  lineBreakMode:NSLineBreakByCharWrapping];
+            CGSize labelSize2=[CommonFunc getSizeByText:summaryContent width:self.view.frame.size.width-self.courseDate.frame.origin.x-10 font:self.courseDate.font];
+            rect=self.courseDate.frame;
+            rect.origin.y=12;
+            rect.size=labelSize2;
+            UILabel *lb_summaryContent=[[UILabel alloc]initWithFrame:rect];
+            lb_summaryContent.text=summaryContent;
+            lb_summaryContent.tag=99;
+            lb_summaryContent.font=[UIFont systemFontOfSize:14];
+            lb_summaryContent.numberOfLines=0;
+            lb_summaryContent.lineBreakMode=NSLineBreakByCharWrapping;
+            [self.photosView2 addSubview:lb_summaryContent];
+            
+            //self.courseContent.text=[dict objectForKey:@"授课内容"];
+            //self.courseZuoYe.text=[dict objectForKey:@"课后作业"];
+            self.courseDate.text=[NSString stringWithFormat:@"%@ %@节",[dict objectForKey:@"上课日期"],[dict objectForKey:@"节次"]];
+            self.classRoom.text=[dict objectForKey:@"教室"];
+            self.courseJiLv.text=[dict objectForKey:@"课堂纪律"];
+            self.courseWeiSheng.text=[dict objectForKey:@"教室卫生"];
             NSString *chuqinrenName=[teacherInfoDic objectForKey:@"姓名"];
             NSArray *tmpArray=[chuqinrenName componentsSeparatedByString:@"["];
             self.chuqinren.text=[[tmpArray objectAtIndex:0] stringByAppendingString:@"的出勤"];
             self.chuqin.text=[dict objectForKey:@"个人出勤"];
-            photosArray=[dict objectForKey:@"课堂笔记图片"];
-            if (photosArray!=nil && photosArray.count>0 && self.courseContent.text.length>0) {
-                self.courseContent.text=[NSString stringWithFormat:@"%@\n\n\n",[dict objectForKey:@"授课内容"]];
+            [self.chuqin sizeToFit];
+            self.teacherPingjiaNum.text=[NSString stringWithFormat:@"%@人评",[dict objectForKey:@"老师评分数"]];
+            if(coursePingJiaNum==nil)
+            {
+                UIImageView *iv=[self.courseGrade objectAtIndex:4];
+                CGRect frame=iv.frame;
+                frame.origin.x=frame.origin.x+frame.size.width+6;
+                frame.origin.y=frame.origin.y+10;
+                frame.size.height=15;
+                frame.size.width=frame.size.width*3;
+                coursePingJiaNum=[[UILabel alloc] initWithFrame:frame];
+                coursePingJiaNum.font=[UIFont systemFontOfSize:12];
+                UIView *parentView=iv.superview;
+                [parentView addSubview:coursePingJiaNum];
             }
+            coursePingJiaNum.text=[NSString stringWithFormat:@"%@人评",[dict objectForKey:@"课程评分数"]];
+            photosArray=[dict objectForKey:@"课堂笔记图片"];
+            photosArray1=[dict objectForKey:@"课堂作业图片"];
+            photosArray2=[dict objectForKey:@"课堂情况图片"];
+            if (photosArray!=nil && photosArray.count>0)
+            {
+                [self drawImageFromArray:labelSize.height+lb_courseContent.frame.origin.y+5 array:photosArray parent:self.photosView];
+                //self.courseContent.text=[NSString stringWithFormat:@"%@",[dict objectForKey:@"授课内容"]];
+            }
+            if(photosArray1!=nil && photosArray1.count>0)
+            {
+                [self drawImageFromArray:labelSize1.height+lb_zuoyeContent.frame.origin.y+5 array:photosArray1 parent:self.photosView1];
+            }
+            if(photosArray2!=nil && photosArray2.count>0)
+            {
+                [self drawImageFromArray:labelSize2.height+lb_summaryContent.frame.origin.y+5 array:photosArray2 parent:self.photosView2];
+            }
+            //[self.tableView reloadRowsAtIndexPaths:[NSArray arrayWithObjects:[NSIndexPath indexPathForRow:3 inSection:1],[NSIndexPath indexPathForRow:4 inSection:1], nil] withRowAnimation:UITableViewRowAnimationAutomatic];
+            //int top=[self tableView:self.tableView heightForRowAtIndexPath:[NSIndexPath indexPathForRow:3 inSection:1]]-40;
             [self.tableView reloadData];
-            int top=[self tableView:self.tableView heightForRowAtIndexPath:[NSIndexPath indexPathForRow:1 inSection:1]]-40;
-            [self drawImageFromArray:top];
+            
+            
         }
     }
     if([request.username isEqualToString:@"下载图片"])
@@ -198,8 +283,7 @@ extern NSString *kInitURL;
         NSString *filename=[item objectForKey:@"文件名"];
         filename=[savePath stringByAppendingString:filename];
         [datas writeToFile:filename atomically:YES];
-        UIView *parentCell=[item objectForKey:@"parentCell"];
-        UIButton *btn=(UIButton *)[parentCell viewWithTag:request.tag];
+        UIButton *btn=[item objectForKey:@"selBtn"];
         for(UIActivityIndicatorView *v in btn.subviews)
         {
             if([v isKindOfClass:[UIActivityIndicatorView class]])
@@ -227,25 +311,24 @@ extern NSString *kInitURL;
     }
 }
 
--(void)drawImageFromArray:(int)top
+-(void)drawImageFromArray:(int)top array:(NSArray *)photos parent:(UIView *)parentView
 {
-    UITableViewCell *parentCell=[self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:1 inSection:1]];
-    for(int i=0;i<5;i++)
-    {
-        UIView *subview=[parentCell viewWithTag:100+i];
-        if(subview)
-            [subview removeFromSuperview];
-    }
-    int j=(int)photosArray.count;
-    int left=100;
+    
+    int j=(int)photos.count;
+    int cols=(self.view.frame.size.width-100)/41;
+    int left=110;
     if(kIOS7)
         left=110;
     for(int i=0;i<j;i++)
     {
-        UIButton *selBtn=[[UIButton alloc]initWithFrame:CGRectMake(left+i*41, top, 35, 35)];
-        NSMutableDictionary *item=[NSMutableDictionary dictionaryWithDictionary:[photosArray objectAtIndex:i]];
-        [item setObject:parentCell forKey:@"parentCell"];
+        UIButton *selBtn;
+        if(i<cols)
+            selBtn=[[UIButton alloc]initWithFrame:CGRectMake(left+i*41, top, 35, 35)];
+        else
+            selBtn=[[UIButton alloc]initWithFrame:CGRectMake(left+(i-cols)*41, top+41, 35, 35)];
+        NSMutableDictionary *item=[NSMutableDictionary dictionaryWithDictionary:[photos objectAtIndex:i]];
         NSString *filename=[item objectForKey:@"文件名"];
+        [item setObject:selBtn forKey:@"selBtn"];
         filename=[savePath stringByAppendingString:filename];
         if([CommonFunc fileIfExist:filename])
         {
@@ -275,22 +358,26 @@ extern NSString *kInitURL;
         selBtn.layer.borderColor = [UIColor grayColor].CGColor;
         selBtn.layer.borderWidth =1.0;
         [selBtn addTarget:self action:@selector(popPhotoView:) forControlEvents:UIControlEventTouchUpInside];
-        [parentCell addSubview:selBtn];
-        
-        
+        [parentView addSubview:selBtn];
     }
-    [self.tableView reloadData];
+    
     
 }
 
 -(void)popPhotoView:(UIButton *)sender
 {
-    
+    NSArray *photos;
+    if([sender.superview isEqual:self.photosView])
+        photos=photosArray;
+    else if([sender.superview isEqual:self.photosView1])
+        photos=photosArray1;
+    else
+        photos=photosArray2;
     DDIPictureBrows *browserView = [[DDIPictureBrows alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     NSMutableArray *picArray=[NSMutableArray array];
-    for(int i=0;i<photosArray.count;i++)
+    for(int i=0;i<photos.count;i++)
     {
-        NSDictionary *item=[photosArray objectAtIndex:i];
+        NSDictionary *item=[photos objectAtIndex:i];
         NSString *filename=[item objectForKey:@"文件名"];
         filename=[savePath stringByAppendingString:filename];
         if([CommonFunc fileIfExist:filename])
@@ -309,6 +396,7 @@ extern NSString *kInitURL;
 {
     self.parentViewController.navigationItem.title=self.className;
     self.parentViewController.navigationItem.rightBarButtonItem =nil;
+    [super viewWillAppear:animated];
 }
 - (void)didReceiveMemoryWarning
 {
@@ -357,18 +445,55 @@ extern NSString *kInitURL;
 {
     int height=[super tableView:tableView heightForRowAtIndexPath:indexPath];
     UITableViewCell *cell=[self tableView:tableView cellForRowAtIndexPath:indexPath];
-    if([self.cellsChangeHeight containsObject:cell] && cell.detailTextLabel.text.length>0)
+    UILabel *realLabel=[cell viewWithTag:99];
+    if(!realLabel)
+        realLabel=cell.detailTextLabel;
+
+    if([self.cellsChangeHeight containsObject:cell])
     {
-        [cell.detailTextLabel sizeToFit];
-        NSString *text=cell.detailTextLabel.text;
-        CGSize constraint =CGSizeMake(180.0f, 1000.0f);
-        CGSize labelSize=[text sizeWithFont:cell.detailTextLabel.font constrainedToSize:constraint  lineBreakMode:NSLineBreakByCharWrapping];
+        [realLabel sizeToFit];
+        NSString *text=realLabel.text;
+        //CGSize constraint =CGSizeMake(cell.frame.size.width-realLabel.frame.origin.x-20, 1000.0f);
+        //CGSize labelSize=[text sizeWithFont:realLabel.font constrainedToSize:constraint  lineBreakMode:NSLineBreakByCharWrapping];
+        UIFont *font=realLabel.font;
+        if(!font)
+            font=[UIFont systemFontOfSize:14];
+        CGSize labelSize=[CommonFunc getSizeByText:text width:cell.frame.size.width-realLabel.frame.origin.x-10 font:font] ;
+        
+        CGRect rect=realLabel.frame;
+        rect.size=labelSize;
+        realLabel.frame=rect;
         if(labelSize.height+20>height)
             height=labelSize.height+20;
+        if(indexPath.section==1 && indexPath.row==3 && photosArray.count>0)
+        {
+            int cols=(self.view.frame.size.width-110)/41;
+            if(photosArray.count>cols)
+                height=height+41*2;
+            else
+                height=height+41;
+        }
+        if(indexPath.section==1 && indexPath.row==4 && photosArray1.count>0)
+        {
+            int cols=(self.view.frame.size.width-110)/41;
+            if(photosArray1.count>cols)
+                height=height+41*2;
+            else
+                height=height+41;
+        }
+        if(indexPath.section==2 && indexPath.row==0 && photosArray2.count>0)
+        {
+            int cols=(self.view.frame.size.width-110)/41;
+            if(photosArray2.count>cols)
+                height=height+41*2;
+            else
+                height=height+41;
+        }
 
     }
     return height;
 }
+
 -(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
 {
     return 30;

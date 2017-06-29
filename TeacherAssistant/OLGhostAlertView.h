@@ -20,7 +20,7 @@ typedef NS_ENUM(NSUInteger, OLGhostAlertViewStyle) {
 };
 
 @interface OLGhostAlertView : UIView
-
+- (id)initWithIndicator:(NSString *)title timeout:(NSTimeInterval)timeout dismissible:(BOOL)dismissible;
 - (id)initWithTitle:(NSString *)title;
 - (id)initWithTitle:(NSString *)title message:(NSString *)message;
 - (id)initWithTitle:(NSString *)title message:(NSString *)message timeout:(NSTimeInterval)timeout dismissible:(BOOL)dismissible;

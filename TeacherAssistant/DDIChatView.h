@@ -16,7 +16,7 @@
 #import "OLGhostAlertView.h"
 #import "DDIMyInforView.h"
 #import "DDIStudentInfo.h"
-@interface DDIChatView : JSMessagesViewController
+@interface DDIChatView : JSMessagesViewController<UIActionSheetDelegate>
 {
     UIImage *tmpImage;
     int oldMsgCount;

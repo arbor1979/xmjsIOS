@@ -81,10 +81,20 @@ extern DDIDataModel *datam;
         NSDictionary *dic=[NSJSONSerialization JSONObjectWithData:datas options:NSJSONReadingAllowFragments error:nil];;
         if(dic)
         {
-            _news.title=[dic objectForKey:@"标题"];
+            if([[dic objectForKey:@"标题"] isEqual:[NSNull null]])
+            {
+                _news.title=@"";
+                OLGhostAlertView *tipView = [[OLGhostAlertView alloc] initWithTitle:@"原文可能已被删除"];
+                [tipView show];
+            }
+            else
+                _news.title=[dic objectForKey:@"标题"];
             _news.time=[dic objectForKey:@"第二行"];
             _news.image=[dic objectForKey:@"第二行图片区URL"];
-            _news.content=[dic objectForKey:@"通知内容"];
+            if([[dic objectForKey:@"通知内容"] isEqual:[NSNull null]])
+                _news.content=@"";
+            else
+                _news.content=[dic objectForKey:@"通知内容"];
             _news.picArray=[dic objectForKey:@"图片数组"];
             _news.fujianArray=[dic objectForKey:@"附件"];
             [self drawScrollContent];
@@ -142,9 +152,11 @@ extern DDIDataModel *datam;
     [scrollView addSubview:time];
     y=y+time.frame.size.height+10;
     UIButton *imagev=nil;
+    int width=self.view.frame.size.width-35;
     if(_news.image && _news.image.length>0)
     {
-        imagev=[[UIButton alloc]initWithFrame:CGRectMake(18, y, 285, 100)];
+        
+        imagev=[[UIButton alloc]initWithFrame:CGRectMake(18, y, width, 100)];
         NSArray *sepArray=[_news.image componentsSeparatedByString:@"/"];
         NSString *filename=[sepArray objectAtIndex:sepArray.count-1];
         
@@ -154,7 +166,7 @@ extern DDIDataModel *datam;
             UIImage *img=[UIImage imageWithContentsOfFile:filename];
             float rate=img.size.height/img.size.width;
             int height=imagev.frame.size.width*rate;
-            imagev.frame=CGRectMake(imagev.frame.origin.x,imagev.frame.origin.y, 285, height);
+            imagev.frame=CGRectMake(imagev.frame.origin.x,imagev.frame.origin.y, width, height);
             [imagev setBackgroundImage:img forState:UIControlStateNormal];
             [imagev addTarget:self action:@selector(popPhotoView) forControlEvents:UIControlEventTouchUpInside];
             [scrollView addSubview:imagev];
@@ -165,7 +177,9 @@ extern DDIDataModel *datam;
     UILabel *content=[[UILabel alloc]initWithFrame:CGRectMake(18, y, scrollView.bounds.size.width-32, 25)];
     content.font=[UIFont systemFontOfSize:16];
     [content setNumberOfLines:0];
-    content.text=_news.content;
+    //content.text=_news.content;
+    NSAttributedString *attstr=[[NSAttributedString alloc] initWithData:[_news.content dataUsingEncoding:NSUnicodeStringEncoding] options:@{NSDocumentTypeDocumentAttribute:NSHTMLTextDocumentType} documentAttributes:nil error:nil];
+    content.attributedText=attstr;
     [content sizeToFit];
     [scrollView addSubview:content];
     y=y+content.frame.size.height+10;
@@ -178,7 +192,7 @@ extern DDIDataModel *datam;
             NSString *name=[item objectForKey:@"name"];
             
             UIFont *font=[UIFont systemFontOfSize:16];
-            CGSize size1 = [name sizeWithFont:font constrainedToSize:CGSizeMake(285, 1000.0f) lineBreakMode:NSLineBreakByWordWrapping];
+            CGSize size1 = [name sizeWithFont:font constrainedToSize:CGSizeMake(width, 1000.0f) lineBreakMode:NSLineBreakByWordWrapping];
             UIButton *btn=[[UIButton alloc]initWithFrame:CGRectMake(18, y, scrollView.bounds.size.width-32, size1.height)];
             btn.titleLabel.textColor=[UIColor blueColor];
             btn.titleLabel.font=font;

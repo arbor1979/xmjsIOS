@@ -17,6 +17,7 @@ extern NSDictionary *LinkMandic;//联系人数据
 extern int kUserType;
 extern NSMutableDictionary *lastMsgDic;
 extern DDIDataModel *datam;
+extern int kSchoolId;
 @interface DDIChatView () <JSMessagesViewDelegate, JSMessagesViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate>
 
 @end
@@ -44,8 +45,8 @@ extern DDIDataModel *datam;
     if(fileName!=nil)
     {
         UIImage *img=[UIImage imageWithContentsOfFile:fileName];
-        img=[img scaleToSize1:CGSizeMake(40, 40)];
-        CGRect newSize=CGRectMake(0, 0,40,40);
+        img=[img scaleToSize1:CGSizeMake(80, 80)];
+        CGRect newSize=CGRectMake(0, 0,80,80);
         _respondManImage=[img cutFromImage:newSize];
     }
     else
@@ -56,8 +57,8 @@ extern DDIDataModel *datam;
     if(fileName!=nil)
     {
         UIImage *img=[UIImage imageWithContentsOfFile:fileName];
-        img=[img scaleToSize1:CGSizeMake(40, 40)];
-        CGRect newSize=CGRectMake(0, 0,40,40);
+        img=[img scaleToSize1:CGSizeMake(80, 80)];
+        CGRect newSize=CGRectMake(0, 0,80,80);
         _hostManImage=[img cutFromImage:newSize];
     }
     else
@@ -77,7 +78,37 @@ extern DDIDataModel *datam;
     
     [self updateMsgState];
     [self getUnreadState];
+    
+    //设置导航栏菜单
+    UIButton *shuziBtn = [[UIButton alloc] initWithFrame:CGRectMake(0.0, 100.0, 29.0, 29.0)];
+    [shuziBtn setTitle:@"" forState:UIControlStateNormal];
+    [shuziBtn setBackgroundImage:[UIImage imageNamed:@"shuaizi"] forState:UIControlStateNormal];
+    [shuziBtn addTarget:self action:@selector(clearUnRead) forControlEvents:UIControlEventTouchUpInside];
+    UIBarButtonItem *clearBarBtn = [[UIBarButtonItem alloc] initWithCustomView:shuziBtn];
+    self.navigationItem.rightBarButtonItem=clearBarBtn;
    
+}
+-(void)clearUnRead
+{
+    if(datam.messages.count>0)
+    {
+        UIActionSheet *actionSheet = [[UIActionSheet alloc] initWithTitle:@"是否清除所有聊天记录?"
+                                                                 delegate:self
+                                                        cancelButtonTitle:@"否"
+                                                   destructiveButtonTitle:@"是"
+                                                        otherButtonTitles:nil];
+        [actionSheet showInView:[UIApplication sharedApplication].keyWindow];
+    }
+    
+}
+-(void)actionSheet:(UIActionSheet *)actionSheet didDismissWithButtonIndex:(NSInteger)buttonIndex{
+    if(buttonIndex !=[actionSheet cancelButtonIndex]){
+        
+        [datam deleteMessageByUserId:_respondUser];
+        [datam.messages removeAllObjects];
+        _curMaxId=[datam queryMsgByUserId:_respondUser maxId:-1 minId:0];
+        [self.tableView reloadData];
+    }
 }
 -(void)viewDidAppear:(BOOL)animated
 {
@@ -89,6 +120,7 @@ extern DDIDataModel *datam;
                                              selector:@selector(getNewMessageFromDB:)
                                                  name:@"newMessageReach"
                                                object:nil];
+    [super viewDidAppear:animated];
 }
 -(void)viewDidDisappear:(BOOL)animated
 {
@@ -98,6 +130,7 @@ extern DDIDataModel *datam;
         [aTimer invalidate];
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:@"newMessageReach" object:nil];
+    [super viewDidDisappear:animated];
 }
 -(void)dealloc
 {
@@ -607,7 +640,8 @@ extern DDIDataModel *datam;
     }
     
     NSArray *textArray=[text componentsSeparatedByString:@"_"];
-    if([[textArray objectAtIndex:1] isEqualToString:@"学生"] && kUserType==1)
+    int userSchoolId=[[textArray objectAtIndex:6] intValue];
+    if([[textArray objectAtIndex:1] isEqualToString:@"学生"] && kUserType==1 && kSchoolId==userSchoolId)
     {
         [self performSegueWithIdentifier:@"theStudentInfor" sender:text];
     }
@@ -624,9 +658,11 @@ extern DDIDataModel *datam;
     {
         DDIMyInforView *view=segue.destinationViewController;
         view.userWeiYi=text;
+        
     }else if([segue.identifier isEqualToString:@"theStudentInfor"])
     {
-        DDIStudentInfo *view=segue.destinationViewController;
+        //DDIStudentInfo *view=segue.destinationViewController;
+        DDIMyInforView *view=segue.destinationViewController;
         view.userWeiYi=text;
     }
     

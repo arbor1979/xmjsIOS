@@ -36,6 +36,7 @@ extern NSString *kInitURL;//默认单点webServic
         if(key)
         {
             self.student=[allLinkMan objectAtIndex:key.intValue];
+            /*
             NSString *xuehao=[self.student objectForKey:@"学号"];
             NSString *banjiName=[self.student objectForKey:@"班级"];
             NSArray *banjiChengyuan=[userInfoDic objectForKey:banjiName];
@@ -48,9 +49,11 @@ extern NSString *kInitURL;//默认单点webServic
                     break;
                 }
             }
+            */
         }
     }
-    
+    else
+        self.userWeiYi=[self.student objectForKey:@"用户唯一码"];
 	UIButton *backBtn = [[UIButton alloc] initWithFrame:CGRectMake(0.0, 100.0, 29.0, 29.0)];
     [backBtn setTitle:@"" forState:UIControlStateNormal];
     [backBtn setBackgroundImage:[UIImage imageNamed:@"back"] forState:UIControlStateNormal];
@@ -58,6 +61,7 @@ extern NSString *kInitURL;//默认单点webServic
     UIBarButtonItem *backButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backBtn];
     self.navigationItem.leftBarButtonItem = backButtonItem;
     navbarHeight=self.navigationController.navigationBar.frame.size.height;
+    /*
     if(kIOS7)
     {
         //self.automaticallyAdjustsScrollViewInsets=NO;
@@ -66,7 +70,13 @@ extern NSString *kInitURL;//默认单点webServic
     }
     else
         self.scrollView.frame = CGRectMake(0.0, 0, self.view.frame.size.width, self.view.frame.size.height-navbarHeight-20);
+    */
+    if([UIScreen mainScreen].bounds.size.height<500)
+        self.scrollView.frame = CGRectMake(0.0, 0, self.view.frame.size.width, self.view.frame.size.height-navbarHeight-20);
+    else
+        self.scrollView.frame = CGRectMake(0.0, 0, self.view.frame.size.width, self.view.frame.size.height-navbarHeight-37-20);
     
+
     float scrollWidth=self.scrollView.frame.size.width;
     float scrollHeight=self.scrollView.frame.size.height;
     
@@ -75,9 +85,8 @@ extern NSString *kInitURL;//默认单点webServic
     UIStoryboard *mainStoryboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
     UIViewController* page1ViewController = [mainStoryboard instantiateViewControllerWithIdentifier:@"page1"];
     self.page1 = page1ViewController.view;
-    
-    self.page1.frame = CGRectMake(0.0f, 0.0f, scrollWidth, scrollHeight);
-    
+    self.page1.frame=CGRectMake(0.0f, 0.0f, scrollWidth, scrollHeight);
+    //self.page1.backgroundColor=[UIColor redColor];
     headImage=(UIImageView *)[page1ViewController.view viewWithTag:11];
     UILabel *stuName=(UILabel *)[page1ViewController.view viewWithTag:12];
     UIButton *stuTel=(UIButton *)[page1ViewController.view viewWithTag:13];
@@ -120,38 +129,42 @@ extern NSString *kInitURL;//默认单点webServic
         headImage.image=[UIImage imageNamed:@"woman"];
        //[headImage setImage:[UIImage imageNamed:@"woman"] forState:UIControlStateNormal];
     
+    
     //获取已保存的头像
     NSFileManager *fileManager=[NSFileManager defaultManager];
     NSArray *documentPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,  NSUserDomainMask,YES);
     NSString *savePath=[[documentPaths objectAtIndex:0] stringByAppendingString:@"/students/"];
-    headImageName=[NSString stringWithFormat:@"%@%@.jpg",savePath,xuehao];
+    headImageName=[NSString stringWithFormat:@"%@%@.jpg",savePath,_userWeiYi];
     if([fileManager fileExistsAtPath:headImageName])
     {
         UIImage *oldImage=[UIImage imageWithContentsOfFile:headImageName];
-        CGSize newSize=CGSizeMake(82, 82);
+        CGSize newSize=CGSizeMake(160, 160);
         UIImage *img=[oldImage scaleToSize1:newSize];
-        img=[img cutFromImage:CGRectMake(0, 0, 82, 82)];
+        img=[img cutFromImage:CGRectMake(0, 0, 160, 160)];
         headImage.image=img;
-        headImage.layer.cornerRadius = img.size.width / 2;
-        headImage.layer.masksToBounds = YES;
-        UIButton *tmpBtn=[[UIButton alloc]initWithFrame:headImage.frame];
-        [tmpBtn addTarget:self action:@selector(popLargePic) forControlEvents:UIControlEventTouchUpInside];
-        [page1ViewController.view addSubview:tmpBtn];
-//        UITapGestureRecognizer *gesture=[[UITapGestureRecognizer alloc] initWithTarget:page1ViewController action:@selector(handleGesture:)];
+        //        UITapGestureRecognizer *gesture=[[UITapGestureRecognizer alloc] initWithTarget:page1ViewController action:@selector(handleGesture:)];
 //        [headImage addGestureRecognizer:gesture];
         //[headImage addTarget:self action:@selector(popImageView:) forControlEvents:UIControlEventTouchUpInside];
     }
-    
-    NSString *urlStr=[self.student objectForKey:@"头像"];
-    if(urlStr)
+    else
     {
-        NSURL *url = [NSURL URLWithString:urlStr];
-        ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:url];
-        request.username=headImageName;
-        [request setDelegate:self];
-        [request startAsynchronous];
-        [requestArray addObject:request];
+        NSString *urlStr=[self.student objectForKey:@"用户头像"];
+        if(urlStr)
+        {
+            NSURL *url = [NSURL URLWithString:urlStr];
+            ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:url];
+            request.username=headImageName;
+            [request setDelegate:self];
+            [request startAsynchronous];
+            [requestArray addObject:request];
+        }
     }
+    headImage.layer.cornerRadius = headImage.frame.size.width / 2;
+    headImage.layer.masksToBounds = YES;
+    UIButton *tmpBtn=[[UIButton alloc]initWithFrame:headImage.frame];
+    [tmpBtn addTarget:self action:@selector(popLargePic) forControlEvents:UIControlEventTouchUpInside];
+    [page1ViewController.view addSubview:tmpBtn];
+    
     [stuTelLink addTarget:self action:@selector(ActionSheet:)  forControlEvents:UIControlEventTouchUpInside];
     [stuParentTelLink addTarget:self action:@selector(ActionSheet:)  forControlEvents:UIControlEventTouchUpInside];
     
@@ -277,8 +290,8 @@ extern NSString *kInitURL;//默认单点webServic
         {
             NSString *path=request.username;
             [datas writeToFile:path atomically:YES];
-            newHead=[newHead scaleToSize1:CGSizeMake(82, 82)];
-            CGRect newSize=CGRectMake(0, 0,82,82);
+            newHead=[newHead scaleToSize1:CGSizeMake(160, 160)];
+            CGRect newSize=CGRectMake(0, 0,160,160);
             newHead=[newHead cutFromImage:newSize];
             headImage.image=newHead;
             
@@ -289,8 +302,8 @@ extern NSString *kInitURL;//默认单点webServic
 {
     UIColor *underBodyBg=[[UIColor alloc] initWithRed:208/255.0 green:230/255.0 blue:217/255.0 alpha:1];
     UIColor *BodyBg=[[UIColor alloc] initWithRed:39/255.0 green:174/255.0 blue:98/255.0 alpha:1];
-    
-    UILabel *title=[[UILabel alloc] initWithFrame:CGRectMake(15, 10, 300, 80)];
+    float viewWidth=self.view.frame.size.width;
+    UILabel *title=[[UILabel alloc] initWithFrame:CGRectMake(15, 10, viewWidth-30, 80)];
     title.backgroundColor=[UIColor clearColor];
     title.textAlignment=NSTextAlignmentLeft;
     title.font=[UIFont systemFontOfSize:16];
@@ -300,7 +313,7 @@ extern NSString *kInitURL;//默认单点webServic
     
     [self.page3 addSubview:title];
     
-    UILabel *subTitle=[[UILabel alloc] initWithFrame:CGRectMake(15, 30, 300, 20)];
+    UILabel *subTitle=[[UILabel alloc] initWithFrame:CGRectMake(15, 30, viewWidth-30, 20)];
     subTitle.numberOfLines=2;
     subTitle.backgroundColor=[UIColor clearColor];
     subTitle.textAlignment=NSTextAlignmentLeft;
@@ -323,7 +336,9 @@ extern NSString *kInitURL;//默认单点webServic
     int cellHeight=35;
     int lineHeight=20;
     
-    UIScrollView* scrollerView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, initTop, 320 , self.page3.frame.size.height-initTop-120)];
+    UIScrollView* scrollerView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, initTop, self.page3.frame.size.width , self.page3.frame.size.height-initTop-80)];
+    if([UIScreen mainScreen].bounds.size.height<500)
+        scrollerView.frame=CGRectMake(0, initTop, self.page3.frame.size.width , self.page3.frame.size.height-initTop-80);
     scrollerView.scrollEnabled = YES;
     [self.page3 addSubview:scrollerView];
     
@@ -339,16 +354,16 @@ extern NSString *kInitURL;//默认单点webServic
         head.font=[UIFont systemFontOfSize:12];
         head.numberOfLines=2;
         [head sizeToFit];
-        UILabel *underbody=[[UILabel alloc] initWithFrame:CGRectMake(60, cellHeight*i, 200, lineHeight)];
+        UILabel *underbody=[[UILabel alloc] initWithFrame:CGRectMake(60, cellHeight*i, viewWidth-110, lineHeight)];
         underbody.layer.cornerRadius = 5;
         underbody.backgroundColor=underBodyBg;
-        UILabel *body=[[UILabel alloc] initWithFrame:CGRectMake(60, cellHeight*i, 200*(score.floatValue/100), lineHeight)];
+        UILabel *body=[[UILabel alloc] initWithFrame:CGRectMake(60, cellHeight*i, (viewWidth-110)*(score.floatValue/100), lineHeight)];
         body.layer.cornerRadius = 5;
         UIColor *color=BodyBg;
         if(score.floatValue<60)
             color=[UIColor redColor];
         body.backgroundColor=color;
-        UILabel *scoreLabel=[[UILabel alloc] initWithFrame:CGRectMake(270, cellHeight*i, 30, lineHeight)];
+        UILabel *scoreLabel=[[UILabel alloc] initWithFrame:CGRectMake(viewWidth-40, cellHeight*i, 30, lineHeight)];
         scoreLabel.backgroundColor=[UIColor clearColor];
         scoreLabel.textColor=[UIColor orangeColor];
         scoreLabel.font=[UIFont systemFontOfSize:12];
@@ -358,8 +373,8 @@ extern NSString *kInitURL;//默认单点webServic
         [scrollerView addSubview:body];
         [scrollerView addSubview:scoreLabel];
     }
-    scrollerView.contentSize = CGSizeMake(320, cellHeight*chengjiArray.count);
-    UILabel *avg=[[UILabel alloc] initWithFrame:CGRectMake(80, scrollerView.frame.size.height+initTop+10, 50, 50)];
+    scrollerView.contentSize = CGSizeMake(self.page3.frame.size.width, cellHeight*chengjiArray.count);
+    UILabel *avg=[[UILabel alloc] initWithFrame:CGRectMake(viewWidth/4, scrollerView.frame.size.height+initTop+10, 50, 50)];
     avg.backgroundColor=[UIColor clearColor];
     avg.font=[UIFont systemFontOfSize:18];
     avg.textAlignment=NSTextAlignmentCenter;
@@ -372,8 +387,9 @@ extern NSString *kInitURL;//默认单点webServic
     avg.text=[NSString stringWithFormat:@"%@",avgChengji];
     avg.textColor=BodyBg;
     avg.layer.cornerRadius = 25;
+    avg.layer.masksToBounds=YES;
     avg.backgroundColor=underBodyBg;
-    UILabel *avgdetail=[[UILabel alloc] initWithFrame:CGRectMake(70, scrollerView.frame.size.height+initTop+60, 70, 20)];
+    UILabel *avgdetail=[[UILabel alloc] initWithFrame:CGRectMake(viewWidth/4-10, scrollerView.frame.size.height+initTop+60, 70, 20)];
     avgdetail.backgroundColor=[UIColor clearColor];
     avgdetail.textAlignment=NSTextAlignmentCenter;
     avgdetail.textColor=BodyBg;
@@ -382,15 +398,16 @@ extern NSString *kInitURL;//默认单点webServic
     [self.page3 addSubview:avg];
     [self.page3 addSubview:avgdetail];
     
-    UILabel *total=[[UILabel alloc] initWithFrame:CGRectMake(180, scrollerView.frame.size.height+initTop+10, 50, 50)];
+    UILabel *total=[[UILabel alloc] initWithFrame:CGRectMake(viewWidth*3/5, scrollerView.frame.size.height+initTop+10, 50, 50)];
     total.backgroundColor=[UIColor clearColor];
     total.font=[UIFont systemFontOfSize:18];
     total.textAlignment=NSTextAlignmentCenter;
     total.text=[NSString stringWithFormat:@"%@",allChengji];
     total.layer.cornerRadius = 25;
+    total.layer.masksToBounds=YES;
     total.backgroundColor=underBodyBg;
     total.textColor=BodyBg;
-    UILabel *totaldetail=[[UILabel alloc] initWithFrame:CGRectMake(170, scrollerView.frame.size.height+initTop+60, 70, 20)];
+    UILabel *totaldetail=[[UILabel alloc] initWithFrame:CGRectMake(viewWidth*3/5-10, scrollerView.frame.size.height+initTop+60, 70, 20)];
     totaldetail.backgroundColor=[UIColor clearColor];
     totaldetail.textAlignment=NSTextAlignmentCenter;
     totaldetail.textColor=BodyBg;
@@ -462,7 +479,7 @@ extern NSString *kInitURL;//默认单点webServic
     }
     [pieChart setComponents:components];
     
-    UILabel *title1=[[UILabel alloc] initWithFrame:CGRectMake(20, pieChart.frame.origin.y+pieChart.frame.size.height, 280, 50)];
+    UILabel *title1=[[UILabel alloc] initWithFrame:CGRectMake(20, pieChart.frame.origin.y+pieChart.frame.size.height, width-40, 50)];
     title1.backgroundColor=[UIColor clearColor];
     title1.textAlignment=NSTextAlignmentRight;
     title1.font=[UIFont systemFontOfSize:18];
@@ -578,12 +595,13 @@ extern NSString *kInitURL;//默认单点webServic
 
 - (IBAction)pageChange:(id)sender {
     NSInteger whichPage = self.pageControl.currentPage;
-    self.scrollView.contentOffset = CGPointMake(320 * whichPage, 0.0f);
+    self.scrollView.contentOffset = CGPointMake(self.scrollView.frame.size.width * whichPage, 0.0f);
 
 }
 -(void)viewWillDisappear:(BOOL)animated
 {
     self.scrollView.delegate=nil;
+    [super viewWillDisappear:animated];
 }
 
 

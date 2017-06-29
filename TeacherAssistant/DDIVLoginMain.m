@@ -22,6 +22,7 @@ extern NSMutableDictionary *teacherInfoDic;
 extern NSString *RecDevToken;
 extern Boolean kIOS7;
 extern int kUserType;
+extern int kSchoolId;
 extern DDIDataModel *datam;
 @implementation DDIVLoginMain
 
@@ -40,12 +41,18 @@ extern DDIDataModel *datam;
     
     //设置背景图片
     
-    if([UIScreen mainScreen].bounds.size.height>500)
-    {
-        self.bgImage.image=[UIImage imageNamed:@"640*1136"];
+    if ([UIScreen mainScreen].bounds.size.height==736) {
+        self.bgImage.image=[UIImage imageNamed:@"1242-2208"];
     }
+    else if([UIScreen mainScreen].bounds.size.height==667)
+    {
+        self.bgImage.image=[UIImage imageNamed:@"750-1334"];
+    }
+    else if([UIScreen mainScreen].bounds.size.height==568)
+       self.bgImage.image=[UIImage imageNamed:@"Default-568h@2x"];
     else
-       self.bgImage.image=[UIImage imageNamed:@"Default"];
+       self.bgImage.image=[UIImage imageNamed:@"Default~iphone"];
+    
     userDefaultes = [NSUserDefaults standardUserDefaults];
     NSString *userName = [userDefaultes stringForKey:@"用户名"];
     NSString *password = [userDefaultes stringForKey:@"密码"];
@@ -91,6 +98,7 @@ extern DDIDataModel *datam;
 -(void)viewWillAppear:(BOOL)animated
 {
     [self.navigationController setNavigationBarHidden:YES];
+    [super viewWillAppear:animated];
 }
 
 - (void)didReceiveMemoryWarning
@@ -217,8 +225,10 @@ extern DDIDataModel *datam;
 -(void) connection:(NSURLConnection *)connection didFailWithError: (NSError *)error {
     
     NSLog(@"%@",[error localizedDescription]);
-    self.labelTip.text=[NSString stringWithFormat:@"%@:%@",@"登录失败",[error localizedDescription]];
-    [NSTimer scheduledTimerWithTimeInterval:3 target:self selector:@selector(hideTip) userInfo:nil repeats:NO];
+    //self.labelTip.text=[NSString stringWithFormat:@"%@:%@",@"登录失败",[error localizedDescription]];
+    //[NSTimer scheduledTimerWithTimeInterval:3 target:self selector:@selector(hideTip) userInfo:nil repeats:NO];
+    OLGhostAlertView *tipView = [[OLGhostAlertView alloc] initWithTitle:[NSString stringWithFormat:@"%@:%@",@"登录失败",[error localizedDescription]] message:nil];
+    [tipView show];
     [self.indicator stopAnimating];
     self.loginButton.enabled=YES;
     self.demoBtn.enabled=YES;
@@ -243,8 +253,11 @@ extern DDIDataModel *datam;
                 if(loginState==nil)
                     loginState=@"登录失败，未知错误";
             }
-            self.labelTip.text=loginState;
-            [NSTimer scheduledTimerWithTimeInterval:3 target:self selector:@selector(hideTip) userInfo:nil repeats:NO];
+            //self.labelTip.text=loginState;
+            //[NSTimer scheduledTimerWithTimeInterval:3 target:self selector:@selector(hideTip) userInfo:nil repeats:NO];
+            OLGhostAlertView *tipView = [[OLGhostAlertView alloc] initWithTitle:loginState message:nil];
+            [tipView show];
+            
             [self.indicator stopAnimating];
             self.loginButton.enabled=YES;
             self.demoBtn.enabled=YES;
@@ -261,6 +274,7 @@ extern DDIDataModel *datam;
                 kUserType=2;
             else if ([[tmpArray objectAtIndex:1] isEqualToString:@"家长"])
                 kUserType=3;
+            kSchoolId=[[tmpArray objectAtIndex:6] intValue];
             kServiceURL=[NSString stringWithFormat:@"http://%@",[dict objectForKey:@"域名"]];
             teacherInfoDic=[dict mutableCopy];
             [teacherInfoDic setObject:[tmpArray objectAtIndex:1] forKey:@"用户类型"];
@@ -294,6 +308,7 @@ extern DDIDataModel *datam;
             DDIAppDelegate *app=(DDIAppDelegate *)[UIApplication sharedApplication].delegate;
             [app postUpdateTokenRequest];
             [app getMsgList];
+            [app getAlbumMsg];
             if(kUserType==2)
                 [app getGPS];
             /*
@@ -313,7 +328,7 @@ extern DDIDataModel *datam;
         @try
         {
             dataStr = [[NSString alloc] initWithData:_datas encoding:NSUTF8StringEncoding];
-            NSData *_decodedData   = [[NSData alloc] initWithBase64Encoding:dataStr];
+            NSData *_decodedData   = [[NSData alloc] initWithBase64EncodedString:dataStr options:0];
             upzipData = [LFCGzipUtillity uncompressZippedData:_decodedData];
             dataStr = [[NSString alloc] initWithData:upzipData encoding:NSUTF8StringEncoding];
         }
@@ -322,14 +337,17 @@ extern DDIDataModel *datam;
         }
         if(dataStr==nil || dataStr.length==0)
         {
-            self.labelTip.text=@"获取课表数据失败";
-            [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(hideTip) userInfo:nil repeats:NO];
+            //self.labelTip.text=@"获取课表数据失败";
+            //[NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(hideTip) userInfo:nil repeats:NO];
+            OLGhostAlertView *tipView = [[OLGhostAlertView alloc] initWithTitle:@"获取课表数据失败" message:nil];
+            [tipView show];
             suc=false;
         }
         else
         {
             NSMutableDictionary* dict = [NSJSONSerialization JSONObjectWithData:upzipData options:NSJSONReadingAllowFragments error:nil];
             userInfoDic=[dict mutableCopy];
+            [userDefaultes setObject:[NSDate date] forKey:@"初始化时间"];
             
         }
         [self.indicator stopAnimating];
@@ -365,8 +383,14 @@ extern DDIDataModel *datam;
 //获取所有信息
 -(void) postUserInfo
 {
+    NSString *weekbegin=[userDefaultes valueForKey:@"weekBegin"];
+    if(weekbegin==nil)
+    {
+        weekbegin=@"1";
+        [userDefaultes setValue:weekbegin forKey:@"weekBegin"];
+    }
     NSURL *url = [NSURL URLWithString:[[kServiceURL stringByAppendingString:@"appserver.php?action=initinfo&zip=1"] URLEncodedString]];
-	NSString *post = [NSString stringWithFormat:@"{\"用户较验码\":\"%@\"}",kUserIndentify];
+	NSString *post = [NSString stringWithFormat:@"{\"用户较验码\":\"%@\",\"周日为第一天\":\"%@\"}",kUserIndentify,weekbegin];
     post =[GTMBase64 base64StringBystring:post];
     post=[NSString stringWithFormat:@"DATA=%@",post];
     NSData *postData = [post dataUsingEncoding:NSUTF8StringEncoding];
@@ -508,4 +532,5 @@ extern DDIDataModel *datam;
     self.passWord.text=[item objectForKey:@"密码"];
     [self loginClick:nil];
 }
+
 @end

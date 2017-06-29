@@ -23,6 +23,9 @@
     OLGhostAlertView *alertTip;
     NSString *savePath;
     NSArray *photosArray;
+    NSArray *photosArray1;
+    NSArray *photosArray2;
+    UILabel *coursePingJiaNum;
 }
 @property (strong,nonatomic) NSString *className;
 @property (strong,nonatomic) NSString *classNo;
@@ -34,10 +37,18 @@
 @property (weak, nonatomic) IBOutlet UILabel *chargeCourse;
 @property (weak, nonatomic) IBOutlet UILabel *chargeClass;
 @property (strong, nonatomic) IBOutletCollection(UIImageView) NSArray *courseGrade;
-@property (weak, nonatomic) IBOutlet UILabel *courseContent;
-@property (weak, nonatomic) IBOutlet UILabel *courseZuoYe;
+@property (weak, nonatomic) IBOutlet UILabel *courseDate;
+@property (weak, nonatomic) IBOutlet UILabel *classRoom;
+@property (weak, nonatomic) IBOutlet UIView *photosView;
+@property (weak, nonatomic) IBOutlet UIView *photosView1;
+@property (weak, nonatomic) IBOutlet UIView *photosView2;
+
+@property (weak, nonatomic) IBOutlet UILabel *courseJiLv;
+@property (weak, nonatomic) IBOutlet UILabel *courseWeiSheng;
 @property (strong, nonatomic) IBOutletCollection(UITableViewCell) NSArray *cellsChangeHeight;
 @property (weak, nonatomic) IBOutlet UILabel *chuqin;
 @property (weak, nonatomic) IBOutlet UILabel *chuqinren;
+@property (weak, nonatomic) IBOutlet UILabel *teacherPingjiaNum;
+
 - (IBAction)showBigPic:(id)sender;
 @end

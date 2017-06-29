@@ -18,7 +18,7 @@
 #import "DDIStudentInfo.h"
 @interface DDIMessageList : UITableViewController<UISearchBarDelegate, UISearchDisplayDelegate>
 {
-    NSMutableDictionary *badgeDic;
+
     NSArray *filteredMessages;
     UIBarButtonItem *broadCastBtn;
     UIImage *groupImage;

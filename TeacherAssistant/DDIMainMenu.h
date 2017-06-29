@@ -17,13 +17,18 @@
 #import "DDINotifySetup.h"
 #import "DDIHelpView.h"
 #import "DDIHelpQuest.h"
-@interface DDIMainMenu : UITableViewController <UIActionSheetDelegate>
+#import "DDIAlbumPersonal.h"
+#import "CommonFunc.h"
+#import "NSString+URLEncoding.h"
+
+@interface DDIMainMenu : UITableViewController <UIActionSheetDelegate,UIAlertViewDelegate>
 {
-    NSString *savePath;
-    UIImage *oldImage;
+    
     UIImage *headImage;
     NSMutableArray *requestArray;
+    NSUserDefaults *userDefaultes;
 }
+@property (weak, nonatomic) IBOutlet UIButton *reloginBtn;
 @property (strong,nonatomic) IBOutlet UILabel *lblBanben;
 @property (strong,nonatomic) IBOutlet UILabel *lblName;
 @property (strong,nonatomic) IBOutlet UILabel *lblBumen;

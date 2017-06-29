@@ -50,7 +50,7 @@
     [sendButton setTitle:title forState:UIControlStateNormal];
     [sendButton setTitle:title forState:UIControlStateHighlighted];
     [sendButton setTitle:title forState:UIControlStateDisabled];
-    sendButton.autoresizingMask = (UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin);
+    //sendButton.autoresizingMask = (UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin);
     
     return sendButton;
 }

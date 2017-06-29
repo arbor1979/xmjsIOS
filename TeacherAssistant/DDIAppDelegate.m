@@ -15,7 +15,9 @@ NSMutableDictionary *userInfoDic;//用户所有数据
 NSMutableDictionary *teacherInfoDic;//老师数据
 int kUserType;//1=老师 2=学生 3=家长
 NSDictionary *LinkMandic;//所有联系人
+NSMutableDictionary *tempLinkMandic; //临时联系人
 NSMutableDictionary *lastMsgDic;//最后一次消息记录
+NSMutableDictionary *cacheImageDic; //缓存图片地址
 NSMutableArray *colorArray;
 Boolean kIOS7;
 NSString *talkingRespond;
@@ -25,6 +27,7 @@ CLLocationCoordinate2D stuLocation;
 NSString *stuCity;
 NSString *stuAddress;
 DDIDataModel *datam;
+int kSchoolId;//学校id
 
 @implementation DDIAppDelegate
 
@@ -42,6 +45,8 @@ DDIDataModel *datam;
     if(kIOS7)
         [[UINavigationBar appearance] setTintColor:[UIColor whiteColor]];
     
+    [CommonFunc initSegmentOfIOS6];
+    
     [colorArray addObject:[UIColor colorWithRed:237/255.0f green:165/255.0f blue:115/255.0f alpha:1.0]];
     [colorArray addObject:[UIColor colorWithRed:85/255.0f green:180/255.0f blue:186/255.0f alpha:1.0]];
     [colorArray addObject:[UIColor colorWithRed:222/255.0f green:225/255.0f blue:136/255.0f alpha:1.0]];
@@ -53,24 +58,39 @@ DDIDataModel *datam;
     [colorArray addObject:[UIColor colorWithRed:103/255.0f green:183/255.0f blue:213/255.0f alpha:1.0]];
     [colorArray addObject:[UIColor colorWithRed:249/255.0f green:121/255.0f blue:182/255.0f alpha:1.0]];
     [colorArray addObject:[UIColor colorWithRed:145/255.0f green:117/255.0f blue:240/255.0f alpha:1.0]];
+    
+    [colorArray addObject:[UIColor colorWithRed:255/255.0f green:61/255.0f blue:161/255.0f alpha:1.0]];
+    [colorArray addObject:[UIColor colorWithRed:255/255.0f green:152/255.0f blue:117/255.0f alpha:1.0]];
+    [colorArray addObject:[UIColor colorWithRed:150/255.0f green:140/255.0f blue:255/255.0f alpha:1.0]];
+    [colorArray addObject:[UIColor colorWithRed:206/255.0f green:138/255.0f blue:255/255.0f alpha:1.0]];
+    [colorArray addObject:[UIColor colorWithRed:255/255.0f green:220/255.0f blue:138/255.0f alpha:1.0]];
+    
+    [colorArray addObject:[UIColor colorWithRed:188/255.0f green:221/255.0f blue:243/255.0f alpha:1.0]];
+    [colorArray addObject:[UIColor colorWithRed:214/255.0f green:171/255.0f blue:216/255.0f alpha:1.0]];
+    [colorArray addObject:[UIColor colorWithRed:134/255.0f green:148/255.0f blue:205/255.0f alpha:1.0]];
+    [colorArray addObject:[UIColor colorWithRed:142/255.0f green:206/255.0f blue:231/255.0f alpha:1.0]];
+    [colorArray addObject:[UIColor colorWithRed:186/255.0f green:192/255.0f blue:222/255.0f alpha:1.0]];
     datam=[[DDIDataModel alloc]init];
  
-
-    if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 8.0) {
-        UIUserNotificationType myTypes = UIRemoteNotificationTypeBadge | UIRemoteNotificationTypeAlert | UIRemoteNotificationTypeSound;
-        UIUserNotificationSettings *settings = [UIUserNotificationSettings settingsForTypes:myTypes categories:nil];
-        [application registerUserNotificationSettings:settings];
-    }else
-    {
-        UIRemoteNotificationType myTypes = UIRemoteNotificationTypeBadge|UIRemoteNotificationTypeAlert|UIRemoteNotificationTypeSound;
-        [application registerForRemoteNotificationTypes:myTypes];
+#ifdef __IPHONE_8_0
+    if ([[UIApplication sharedApplication] respondsToSelector:@selector(registerUserNotificationSettings:)]) {
+        UIUserNotificationSettings *settings = [UIUserNotificationSettings settingsForTypes:UIUserNotificationTypeBadge|UIUserNotificationTypeSound|UIUserNotificationTypeAlert categories:nil];
+        [[UIApplication sharedApplication] registerUserNotificationSettings:settings];
+    }  else {
+        UIRemoteNotificationType myTypes = UIRemoteNotificationTypeBadge | UIRemoteNotificationTypeAlert | UIRemoteNotificationTypeSound;
+        [[UIApplication sharedApplication] registerForRemoteNotificationTypes:myTypes];
     }
+#else
     
+    UIRemoteNotificationType myTypes = UIRemoteNotificationTypeBadge|UIRemoteNotificationTypeAlert|UIRemoteNotificationTypeSound;
+    [application registerForRemoteNotificationTypes:myTypes];
     
-    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-    RecDevToken=[userDefaults objectForKey:@"Token"];
-    if(RecDevToken==nil)
-        RecDevToken=@"eea80ca13f6a058fb7b3420614f2fb57115589e61ef844e0405f8881f6119a2b";
+#endif
+    
+    //NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    //RecDevToken=[userDefaults objectForKey:@"Token"];
+    //if(RecDevToken==nil)
+    //    RecDevToken=@"";
     
     //检测新版本
     NSString *urlStr=@"http://itunes.apple.com/lookup?id=";
@@ -83,9 +103,16 @@ DDIDataModel *datam;
     ifUpdate=false;
     curVersion=[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
     
+    
+    
     return YES;
 }
-
+#ifdef __IPHONE_8_0
+- (void)application:(UIApplication *)application didRegisterUserNotificationSettings:(UIUserNotificationSettings *)notificationSettings
+{
+    [application registerForRemoteNotifications];
+}
+#endif
 
 - (void)application:(UIApplication *)app didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)devToken {
 
@@ -125,13 +152,15 @@ DDIDataModel *datam;
         {
             localNotification.fireDate= [[[NSDate alloc] init] dateByAddingTimeInterval:1];
             localNotification.timeZone=[NSTimeZone defaultTimeZone];
-            localNotification.alertBody = @"老师助手有新的版本，点击到App Store升级。";
+            localNotification.alertBody = @"掌上校园有新的版本，点击到App Store升级。";
             localNotification.alertAction = @"升级";
             localNotification.soundName = @"";
             [[UIApplication sharedApplication] scheduleLocalNotification:localNotification];
             bLocalNotify=true;
         }
     }
+    NSString *linkManSavePath=[CommonFunc getLinkManPath:@"linkmanAvatar"];
+    [CommonFunc writeToPlistFile:linkManSavePath dic:cacheImageDic];
 }
 
 - (void)application:(UIApplication *)application didReceiveLocalNotification:(UILocalNotification *)notification {
@@ -157,6 +186,15 @@ DDIDataModel *datam;
     {
         [self getGPS];
     }
+    [self getAlbumMsg];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadNotice" object:nil];
+    NSString *linkManSavePath=[CommonFunc getLinkManPath:@"linkmanAvatar"];
+    if([CommonFunc fileIfExist:linkManSavePath])
+    {
+        cacheImageDic=[NSMutableDictionary dictionaryWithDictionary:[CommonFunc readFromPlistFile:linkManSavePath]];
+    }
+    if(cacheImageDic==nil)
+        cacheImageDic=[NSMutableDictionary dictionary];
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application
@@ -275,7 +313,27 @@ DDIDataModel *datam;
     [request startAsynchronous];
     
 }
-
+- (void)getAlbumMsg
+{
+    if(kUserIndentify==nil) return;
+    NSMutableDictionary *dic=[[NSMutableDictionary alloc] init ];
+    NSNumber *timeStamp=[[NSNumber alloc] initWithLong:[[NSDate new] timeIntervalSince1970]];
+    [dic setObject:timeStamp forKey:@"DATETIME"];
+    [dic setObject:kUserIndentify forKey:@"用户较验码"];
+    [dic setObject:@"相册未读消息" forKey:@"action"];
+    NSError *error;
+    NSData *postData=[NSJSONSerialization dataWithJSONObject:dic options:NSJSONWritingPrettyPrinted error:&error];
+    NSString *postStr = [[NSString alloc] initWithData:postData encoding:NSUTF8StringEncoding];
+    postStr=[GTMBase64 base64StringBystring:postStr];
+    NSString *urlStr=[kInitURL stringByAppendingString:@"AlbumPraise.php"];
+    NSURL* url = [NSURL URLWithString:urlStr];
+    ASIFormDataRequest* request = [ASIFormDataRequest requestWithURL:url];
+    [request setPostValue:postStr forKey:@"DATA"];
+    [request setDelegate:self];
+    request.username=@"相册未读消息";
+    [request startAsynchronous];
+    
+}
 - (void)requestFinished:(ASIHTTPRequest *)request
 {
     if([request.username isEqualToString:@"获取消息"] || [request.username isEqualToString:@"更新Token"])
@@ -383,12 +441,54 @@ DDIDataModel *datam;
                      stuCity=plmark.locality;
                      stuAddress=plmark.name;
                      //NSLog(@"%@",plmark);
-                     [self postGPS:@""];
+                     if(kUserType==2)
+                       [self postGPS:@""];
+                     [[NSNotificationCenter defaultCenter] postNotificationName:@"getGPSAddress" object:nil];
                  }
                  
              }];
         }
     }
+    if([request.username isEqualToString:@"相册未读消息"])
+    {
+        NSData *data = [request responseData];
+        NSString* dataStr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        dataStr=[GTMBase64 stringByBase64String:dataStr];
+        data = [dataStr dataUsingEncoding: NSUTF8StringEncoding];
+        NSDictionary* dict = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments error:nil];
+        if(dict)
+        {
+            NSString *result=[dict objectForKey:@"结果"];
+        
+            if([result isEqualToString:@"成功"])
+            {
+                NSArray *unreadDic=[dict objectForKey:@"result"];
+                
+                if(unreadDic && unreadDic.count>0)
+                {
+                    for(NSDictionary *item in unreadDic)
+                    {
+                        if(item)
+                            [datam insertNewAubumMsg:item];
+                    }
+                    [[NSNotificationCenter defaultCenter] postNotificationName:@"newAlbumMessage" object:nil];
+                }
+                
+            }
+        }
+    }
     
+}
+- (BOOL)application:(UIApplication *)application
+            openURL:(NSURL *)url
+  sourceApplication:(NSString *)sourceApplication
+         annotation:(id)annotation {
+    
+    //跳转支付宝钱包进行支付，处理支付结果
+    [[AlipaySDK defaultService] processOrderWithPaymentResult:url standbyCallback:^(NSDictionary *resultDic) {
+        NSLog(@"result = %@",resultDic);
+    }];
+    
+    return YES;
 }
 @end

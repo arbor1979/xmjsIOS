@@ -82,7 +82,7 @@
     CGImageRef newImageRef = CGImageCreateWithImageInRect(sourceImageRef, rect);
     
     UIImage *newImage = [UIImage imageWithCGImage:newImageRef];
-    
+    CGImageRelease(newImageRef);
     return newImage;
     
 }

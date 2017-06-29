@@ -26,13 +26,17 @@ extern Boolean kIOS7;
     _titleArray= [NSMutableArray array];
     self.tableView.backgroundColor=[UIColor colorWithRed:228/255.0 green:244/255.0 blue:234/255.0 alpha:1];
     [self loadTitleData];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(loadTitleData)
+                                                 name:@"needRefreshTitle"
+                                               object:nil];
     
 }
 -(void)viewWillAppear:(BOOL)animated
 {
     if(_titleArray.count>0)
         [self.tableView reloadData];
-    
+    [super viewWillAppear:animated];
 }
 - (void)didReceiveMemoryWarning
 {
@@ -47,6 +51,7 @@ extern Boolean kIOS7;
         [req setDownloadProgressDelegate:nil];
         [req clearDelegatesAndCancel];
     }
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"needRefreshTitle" object:nil];
 }
 
 -(void)loadTitleData
@@ -200,7 +205,7 @@ extern Boolean kIOS7;
 
 -(void)loadImageAndSave:(NSString *)imageUrl parentView:(UIView *)parentView indexPath:(NSIndexPath *)indexPath
 {
-    if(imageUrl && imageUrl.length>0)
+    if(imageUrl && ![imageUrl isEqual:[NSNull null]] && imageUrl.length>0)
     {
         NSArray *sepArray=[imageUrl componentsSeparatedByString:@"/"];
         NSString *filename=[sepArray objectAtIndex:sepArray.count-1];
@@ -266,8 +271,9 @@ extern Boolean kIOS7;
     detail.title=[item objectForKey:@"第一行"];
     detail.interfaceUrl=urlStr;
     detail.examStatus=[item objectForKey:@"第二行之状态"];
-    detail.key=indexPath.row;
+    detail.key=(int)indexPath.row;
     detail.parentTitleArray=_titleArray;
+    detail.autoClose=[item objectForKey:@"保存后关闭"];
 }
 
 @end

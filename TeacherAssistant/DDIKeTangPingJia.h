@@ -31,9 +31,11 @@
     OLGhostAlertView *alertTip;
     UIImage *addPhoto;
     NSMutableArray *photosArray;
+    NSMutableArray *photosArray1;
+    NSMutableArray *photosArray2;
     NSString *savePath;
-    UITableViewCell *parentCell;
     MDRadialProgressView *rpv;
+    int curIndex;
 }
 @property (strong, nonatomic) IBOutletCollection(UIButton) NSArray *classBtns;
 @property (strong, nonatomic) IBOutletCollection(UIButton) NSArray *teacherBtns;
@@ -44,6 +46,7 @@
 @property (strong,nonatomic) NSNumber *classIndex;
 @property (weak, nonatomic) IBOutlet UITextView *neiRongText;
 @property (weak, nonatomic) IBOutlet UITextView *zuoYeText;
+@property (weak, nonatomic) IBOutlet UITextView *summaryText;
 @property (strong,nonatomic) NSMutableArray *imageSel; //绿色选中图片
 @property (strong,nonatomic) NSMutableArray *imageDes; //灰色未选中图片
 @property (strong,nonatomic) NSArray *dengjiArray;

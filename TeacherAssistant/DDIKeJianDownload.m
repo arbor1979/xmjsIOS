@@ -35,6 +35,10 @@ extern int kUserType;
         rightBtn= [[UIBarButtonItem alloc] initWithTitle:@"刷新" style:UIBarButtonItemStyleBordered target:self action:@selector(reloadKeJian)];
     _savePath=[CommonFunc createPath:@"/courseware/"];
     _keJianArray=[[NSMutableArray alloc] init];
+    _fileManager=[NSFileManager defaultManager];
+    _formatter = [[NSNumberFormatter alloc] init];
+    [_formatter setNumberStyle:NSNumberFormatterDecimalStyle];
+    [_formatter setPositiveFormat:@"##0.00"];
     /*
     if(kUserType==1)
     {
@@ -126,11 +130,7 @@ extern int kUserType;
 -(void)ifFileExist
 {
     
-    _fileManager=[NSFileManager defaultManager];
     
-    _formatter = [[NSNumberFormatter alloc] init];
-    [_formatter setNumberStyle:NSNumberFormatterDecimalStyle];
-    [_formatter setPositiveFormat:@"##0.00"];
     for(int i=0;i<_keJianArray.count;i++)
     {
         NSMutableDictionary *item=[[NSMutableDictionary alloc] initWithDictionary:[_keJianArray objectAtIndex:i]];
@@ -157,7 +157,7 @@ extern int kUserType;
     self.parentViewController.navigationItem.title=self.className;
     self.parentViewController.navigationItem.rightBarButtonItem =rightBtn;
     [self.tableView reloadData];
-
+    [super viewWillAppear:animated];
 }
 
 - (void)dealloc
@@ -446,7 +446,6 @@ extern int kUserType;
     [_requestArray addObject:request];
     request.timeOutSeconds=0;
     [request startAsynchronous];
-    
     
 }
 

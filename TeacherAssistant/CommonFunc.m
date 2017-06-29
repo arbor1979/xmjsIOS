@@ -7,7 +7,8 @@
 //
 
 #import "CommonFunc.h"
-
+extern Boolean kIOS7;
+extern NSMutableDictionary *cacheImageDic;
 //引入IOS自带密码库
 #import <CommonCrypto/CommonCryptor.h>
 
@@ -137,7 +138,7 @@ static const char encodingTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq
 + (NSData *)dataWithBase64EncodedString:(NSString *)string
 {
     if (string == nil)
-        [NSException raise:NSInvalidArgumentException format:nil];
+        [NSException raise:NSInvalidArgumentException format:@""];
     if ([string length] == 0)
         return [NSData data];
     
@@ -310,6 +311,13 @@ NSDate *today = [cal dateByAddingComponents:components toDate:[[NSDate alloc] in
     NSString * dateStr=[dateformatter stringFromDate:date];
     return dateStr;
 }
++(NSInteger) getweekDayWithDate:(NSDate *) date
+{
+    NSCalendar * calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar]; // 指定日历的算法
+    NSDateComponents *comps = [calendar components:NSWeekdayCalendarUnit fromDate:date];
+    // 0 是周日，1是周一 2.以此类推
+    return [comps weekday]-1;
+}
 +(NSString *)getImageSavePath:(NSString *)userName ifexist:(Boolean)ifexist
 {
     NSString *savePath=@"/";
@@ -321,7 +329,6 @@ NSDate *today = [cal dateByAddingComponents:components toDate:[[NSDate alloc] in
     else if([[splitArray objectAtIndex:1] isEqualToString:@"学生"])
     {
         savePath=@"/students/";
-        userName=[splitArray objectAtIndex:2];
     }
     else if([[splitArray objectAtIndex:1] isEqualToString:@"家长"])
     {
@@ -395,5 +402,254 @@ NSDate *today = [cal dateByAddingComponents:components toDate:[[NSDate alloc] in
     }
     return nil;
 }
++(NSString *)getFileRealName:(NSString *)filePath
+{
+    NSArray *array=[filePath componentsSeparatedByString:@"/"];
+    if(array.count>0)
+    {
+        NSString *filename=[array objectAtIndex:array.count-1];;
+        NSRange range=[[filename lowercaseString] rangeOfString:@".php"];
+        if(range.location!= NSNotFound)
+        {
+            NSArray *temparray=[filename componentsSeparatedByString:@"="];
+            filename=[temparray objectAtIndex:temparray.count-1];
+        }
+        return filename;
+    }
+    else
+        return @"";
+}
++(NSString *)getFileExeName:(NSString *)filePath
+{
+    NSArray *array=[filePath componentsSeparatedByString:@"."];
+    if(array.count>0)
+        return [array objectAtIndex:array.count-1];
+    else
+        return @"";
+}
++(BOOL)copyFile:(NSString *)scrFilePath toFile:(NSString *)toFilePath
+{
+    NSFileManager *fileManager=[NSFileManager defaultManager];
+    NSError *error;
+    BOOL fileExists=[fileManager fileExistsAtPath:scrFilePath];
+    if(!fileExists)
+        NSLog(@"源文件不存在");
+    BOOL iscopy = [fileManager copyItemAtPath:scrFilePath toPath:toFilePath error:&error];
+    if(!iscopy)
+        NSLog(@"copy error:%@",error.description);
+    return fileExists;
+    
+}
++ (NSString*)deviceString
+{
+    // 需要#import "sys/utsname.h"
+    struct utsname systemInfo;
+    uname(&systemInfo);
+    NSString *deviceString = [NSString stringWithCString:systemInfo.machine encoding:NSUTF8StringEncoding];
+    
+    if ([deviceString isEqualToString:@"iPhone1,1"])    return @"iPhone 1G";
+    if ([deviceString isEqualToString:@"iPhone1,2"])    return @"iPhone 3G";
+    if ([deviceString isEqualToString:@"iPhone2,1"])    return @"iPhone 3GS";
+    if ([deviceString isEqualToString:@"iPhone3,1"])    return @"iPhone 4 GSM";
+    if ([deviceString isEqualToString:@"iPhone3,2"])    return @"Verizon iPhone 4";
+    if ([deviceString isEqualToString:@"iPhone3,3"])    return @"iPhone 4 CDMA";
+    if ([deviceString isEqualToString:@"iPhone4,1"])    return @"iPhone 4S";
+    if ([deviceString isEqualToString:@"iPhone5,1"])    return @"iPhone 5";
+    if ([deviceString isEqualToString:@"iPhone5,2"])    return @"iPhone 5";
+    if ([deviceString isEqualToString:@"iPhone5,3"])    return @"iPhone 5C CDMA";
+    if ([deviceString isEqualToString:@"iPhone5,4"])    return @"iPhone 5C GSM";
+    if ([deviceString isEqualToString:@"iPhone6,1"])    return @"iPhone 5S CDMA";
+    if ([deviceString isEqualToString:@"iPhone6,2"])    return @"iPhone 5S GSM";
+    if ([deviceString isEqualToString:@"iPhone7,1"])    return @"iPhone 6";
+    if ([deviceString isEqualToString:@"iPhone7,2"])    return @"iPhone 6 Plus";
+    if ([deviceString isEqualToString:@"iPhone8,1"])    return @"iPhone 6S";
+    if ([deviceString isEqualToString:@"iPhone8,2"])    return @"iPhone 6S Plus";
+    if ([deviceString isEqualToString:@"iPhone9,1"])    return @"iPhone 7";
+    
+    if ([deviceString isEqualToString:@"iPod1,1"])      return @"iPod Touch 1G";
+    if ([deviceString isEqualToString:@"iPod2,1"])      return @"iPod Touch 2G";
+    if ([deviceString isEqualToString:@"iPod3,1"])      return @"iPod Touch 3G";
+    if ([deviceString isEqualToString:@"iPod4,1"])      return @"iPod Touch 4G";
+    if ([deviceString isEqualToString:@"iPad1,1"])      return @"iPad";
+    if ([deviceString isEqualToString:@"iPad2,1"])      return @"iPad 2 (WiFi)";
+    if ([deviceString isEqualToString:@"iPad2,2"])      return @"iPad 2 (GSM)";
+    if ([deviceString isEqualToString:@"iPad2,3"])      return @"iPad 2 (CDMA)";
+    if ([deviceString isEqualToString:@"iPad2,4"])      return @"iPad 2 (Wi-Fi rev_a)";
+    if ([deviceString isEqualToString:@"iPad3,1"])      return @"iPad 3 (WIFI)";
+    if ([deviceString isEqualToString:@"iPad3,2"])      return @"iPad 3 (Wi-Fi+3G+GSM+CDMA)";
+    if ([deviceString isEqualToString:@"iPad3,3"])      return @"iPad 3 (Wi-Fi+3G+GSM)";
+    if ([deviceString isEqualToString:@"iPad2,5"])      return @"iPad mini (Wi-Fi)";
+    if ([deviceString isEqualToString:@"iPad2,6"])      return @"iPad mini (Wi-Fi+3G+4G+GSM)";
+    if ([deviceString isEqualToString:@"iPad2,7"])      return @"iPad mini (Wi-Fi+3G+4G+GSM+CDMA)";
+    if ([deviceString isEqualToString:@"iPad3,4"])      return @"iPad 4 (Wi-Fi)";
+    if ([deviceString isEqualToString:@"iPad3,5"])      return @"iPad 4 (Wi-Fi+3G+4G+GSM)";
+    if ([deviceString isEqualToString:@"iPad3,6"])      return @"iPad 4 (Wi-Fi+3G+4G+GSM+CDMA)";
+    if ([deviceString isEqualToString:@"iPad4,1"])      return @"iPad Air 4G";
+    if ([deviceString isEqualToString:@"iPad4,2"])      return @"iPad Air 4G";
+    if ([deviceString isEqualToString:@"iPad4,3"])      return @"iPad Air 4G";
+    if ([deviceString isEqualToString:@"iPad4,4"])      return @"iPad mini2";
+    if ([deviceString isEqualToString:@"iPad4,5"])      return @"iPad mini2";
+    if ([deviceString isEqualToString:@"iPad4,6"])      return @"iPad mini2";
+    if ([deviceString isEqualToString:@"iPad4,7"])      return @"iPad mini3";
+    if ([deviceString isEqualToString:@"iPad4,8"])      return @"iPad mini3";
+    if ([deviceString isEqualToString:@"iPad4,9"])      return @"iPad mini3";
+    if ([deviceString isEqualToString:@"iPad5,1"])      return @"iPad mini4";
+    if ([deviceString isEqualToString:@"iPad5,2"])      return @"iPad mini4";
+    if ([deviceString isEqualToString:@"iPad5,3"])      return @"iPad Air2";
+    if ([deviceString isEqualToString:@"iPad5,4"])      return @"iPad Air2";
+    
+    if ([deviceString isEqualToString:@"i386"])         return @"Simulator";
+    if ([deviceString isEqualToString:@"x86_64"])       return @"Simulator";
+    NSLog(@"NOTE: Unknown device type: %@", deviceString);
+    return deviceString;
+}
++(void) initSegmentOfIOS6;
+{
+    if (!kIOS7) {
+        UIImage *image = [self imageWithColor:[UIColor colorWithWhite:0 alpha:0.8]
+                                         size:CGSizeMake(1, 28)];
+        [[UISegmentedControl appearance] setBackgroundImage:image
+                                                   forState:UIControlStateSelected
+                                                 barMetrics:UIBarMetricsDefault];
+        [[UISegmentedControl appearance] setDividerImage:image
+                                     forLeftSegmentState:UIControlStateNormal
+                                       rightSegmentState:UIControlStateSelected
+                                              barMetrics:UIBarMetricsDefault];
+        
+        image = [self imageWithColor:[UIColor clearColor]
+                                size:CGSizeMake(1, 28)];
+        [[UISegmentedControl appearance] setBackgroundImage:image
+                                                   forState:UIControlStateNormal
+                                                 barMetrics:UIBarMetricsDefault];
+        
+   
+    }
+    
+}
 
++ (UIImage *)imageWithColor:(UIColor *)color size:(CGSize)size
+{
+    CGRect rect = CGRectMake(0, 0, size.width, size.height);
+    UIGraphicsBeginImageContext(rect.size);
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    
+    CGContextSetFillColorWithColor(context, [color CGColor]);
+    CGContextFillRect(context, rect);
+    
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
+    return image;
+}
++ (UIViewController *)viewController:(UIView *)view {
+         for (UIView* next = [view superview]; next; next = next.superview) {
+                 UIResponder *nextResponder = [next nextResponder];
+                 if ([nextResponder isKindOfClass:[UIViewController class]]) {
+                         return (UIViewController *)nextResponder;
+                     }
+             }
+         return nil;
+}
++(NSString *)chatDateStr:(NSString *)dateStr
+{
+    NSString *result=@"";
+    NSDate *date=[self dateFromString:dateStr];
+    NSDate *now=[NSDate date];
+    NSDate *yesterDay=[self yesterdayBegin];
+    NSDate *beforeYesterday=[self theDayBeforeYesterdayBegin];
+    int hours=[now timeIntervalSinceDate:date]/3600;
+    if(hours<1)
+    {
+        int minute=[now timeIntervalSinceDate:date]/60;
+        if(minute==0)
+            result=@"刚刚";
+        else
+            result=[NSString stringWithFormat:@"%d分钟前",minute];
+    }
+    else if(hours<24)
+        result=[NSString stringWithFormat:@"%d小时前",hours];
+    else
+    {
+        NSString *shortDateStr=[dateStr substringWithRange:NSMakeRange(11, 5)];
+        if([date timeIntervalSinceDate:yesterDay]>0)
+        {
+            result=[NSString stringWithFormat:@"昨天 %@",shortDateStr];
+        }
+        else if([date timeIntervalSinceDate:beforeYesterday]>0)
+        {
+            result=[NSString stringWithFormat:@"前天 %@",shortDateStr];
+        }
+        else
+            result=[dateStr substringToIndex:16];
+    }
+    return result;
+}
++(NSArray *) emojiStringArray
+{
+    NSMutableArray *array=[NSMutableArray array];
+    for(int i=0;i<=106;i++)
+    {
+        NSString *imageName;
+        if(i<10)
+            imageName=[NSString stringWithFormat:@"f00%d",i];
+        else if(i<100)
+            imageName=[NSString stringWithFormat:@"f0%d",i];
+        else
+            imageName=[NSString stringWithFormat:@"f%d",i];
+        [array addObject:imageName];
+    }
+    return array;
+    
+}
++(NSString *) getCacheImagePath:(NSString *)url
+{
+    NSString *path=[cacheImageDic objectForKey:url];
+    if(path==nil)
+        return nil;
+    else
+    {
+        NSFileManager *fileManager=[NSFileManager defaultManager];
+        NSArray *documentPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,  NSUserDomainMask,YES);
+        NSString *prePath=[documentPaths objectAtIndex:0];
+        NSString *fileName=[prePath stringByAppendingString:path];
+        if([fileManager fileExistsAtPath:fileName])
+            return fileName;
+        else
+        {
+            [cacheImageDic removeObjectForKey:url];
+            return nil;
+        }
+    }
+}
++(void) setCacheImagePath:(NSString *)url localPath:(NSString *)localPath
+{
+
+    NSArray *tmpArray=[localPath componentsSeparatedByString:@"/"];
+    NSString *shortPath=[NSString stringWithFormat:@"/%@/%@",[tmpArray objectAtIndex:tmpArray.count-2],[tmpArray objectAtIndex:tmpArray.count-1]];
+    NSArray *allKeys=[cacheImageDic allKeys];
+    for(NSString *key in allKeys)
+    {
+        NSString *value=[cacheImageDic objectForKey:key];
+        if([value isEqualToString:shortPath])
+        {
+            [cacheImageDic removeObjectForKey:key];
+            break;
+        }
+    }
+    [cacheImageDic setObject:shortPath forKey:url];
+}
++(CGSize) getSizeByText:(NSString *)text width:(CGFloat)width font:(UIFont *)font
+{
+    if(!text) text=@"";
+    //NSAttributedString *attrStr = [[NSAttributedString alloc] initWithString:text];
+    //NSRange range = NSMakeRange(0, attrStr.length);
+    //NSDictionary *dic = [attrStr attributesAtIndex:0 effectiveRange:&range];   // 获取该段attributedString的属性字典
+    NSDictionary *dic = @{NSFontAttributeName: font};
+    // 计算文本的大小  ios7.0
+    CGSize labelSize = [text boundingRectWithSize:CGSizeMake(width, MAXFLOAT) // 用于计算文本绘制时占据的矩形块
+                                          options:NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading // 文本绘制时的附加选项
+                                       attributes:dic        // 文字的属性
+                                          context:nil].size;
+    return labelSize;
+}
 @end

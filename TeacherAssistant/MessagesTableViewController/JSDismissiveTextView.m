@@ -104,7 +104,6 @@
 }
 
 #pragma mark - Gestures
-
 - (void)handlePanGesture:(UIPanGestureRecognizer *)pan
 {
     if(!self.keyboardView || self.keyboardView.hidden)

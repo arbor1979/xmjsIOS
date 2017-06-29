@@ -13,6 +13,7 @@ extern NSMutableDictionary *teacherInfoDic;//老师数据
 extern NSDictionary *LinkMandic;//联系人数据
 extern int kUserType;
 extern DDIDataModel *datam;
+extern int kSchoolId;
 @interface DDIMessageList ()
 
 @end
@@ -24,7 +25,7 @@ extern DDIDataModel *datam;
 {
     [super viewDidLoad];
     _headImageDic=[[NSMutableDictionary alloc]init];
-    badgeDic=[[NSMutableDictionary alloc]init];
+ 
     _requestArray=[[NSMutableArray alloc]init];
     _curMaxId=0;
     _unknowMan=[UIImage imageNamed:@"unknowMan"];
@@ -69,7 +70,7 @@ extern DDIDataModel *datam;
 {
     [self performSegueWithIdentifier:@"gotoMultiSel" sender:sender];
 }
--(void)viewWillAppear:(BOOL)animated
+-(void)viewDidAppear:(BOOL)animated
 {
 
     self.parentViewController.navigationItem.title=@"消息";
@@ -77,11 +78,12 @@ extern DDIDataModel *datam;
     _curMaxId=0;
     [_msgList removeAllObjects];
     [self getNewMessageFromDB:nil];
-    
+    [super viewDidAppear:animated];
 }
 -(void)viewDidDisappear:(BOOL)animated
 {
     self.parentViewController.navigationItem.rightBarButtonItem=nil;
+    [super viewDidDisappear:animated];
 }
 - (void)getNewMessageFromDB:(NSNotification*)notification
 {
@@ -109,12 +111,7 @@ extern DDIDataModel *datam;
 }
 -(void)refreshTableAndBadge
 {
-    for (id key in badgeDic) {
-        JSBadgeView *item=[badgeDic objectForKey:key];
-        if(item && item.superview!=nil)
-            [item removeFromSuperview];
-    }
-    [badgeDic removeAllObjects];
+    
     [self.tableView reloadData];
 }
 -(void) getUnReadNum
@@ -149,31 +146,6 @@ extern DDIDataModel *datam;
             [_headImageDic setObject:groupImage forKey:respondUser];
             continue;
         }
-        NSString *picPath=[CommonFunc getImageSavePath:respondUser ifexist:YES];
-        
-        if(picPath!=nil)
-        {
-            UIImage *img=[UIImage imageWithContentsOfFile:picPath];
-            img=[img scaleToSize1:CGSizeMake(40, 40)];
-            CGRect newSize=CGRectMake(0, 0,40,40);
-            img=[img cutFromImage:newSize];
-            [_headImageDic setObject:img forKey:respondUser];
-        }
-        else
-        {
-            NSString *urlStr=[item objectForKey:@"respondUserImage"];
-            if(urlStr==nil || urlStr.length==0 || [urlStr isEqualToString:@"<null>"])
-            {
-                [_headImageDic setObject:_unknowMan forKey:respondUser];
-                continue;
-            }
-            NSURL *url = [NSURL URLWithString:[urlStr URLEncodedString]];
-            ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:url];
-            [_requestArray addObject:request];
-            request.username=respondUser;
-            [request setDelegate:self];
-            [request startAsynchronous];
-        }
         
     }
     
@@ -190,7 +162,9 @@ extern DDIDataModel *datam;
         CGRect newSize=CGRectMake(0, 0,40,40);
         img=[img cutFromImage:newSize];
         [_headImageDic setObject:img forKey:request.username];
-        [self.tableView reloadData];
+        NSIndexPath *index=[request.userInfo objectForKey:@"indexPath"];
+        if(index)
+            [self.tableView reloadRowsAtIndexPaths:[NSArray arrayWithObject:index] withRowAnimation:UITableViewRowAnimationAutomatic];
         
     }
     if([_requestArray containsObject:request])
@@ -248,6 +222,17 @@ extern DDIDataModel *datam;
     {
          cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
         item=[_msgList objectAtIndex:indexPath.row];
+        UIButton *btn=(UIButton *)[cell viewWithTag:104];
+        if(btn==nil)
+        {
+            btn=[[UIButton alloc]initWithFrame:CGRectMake(15, 4, 40, 40)];
+            btn.tag=104;
+            [btn addTarget:self action:@selector(showUserInfo:) forControlEvents:UIControlEventTouchUpInside];
+            
+            [btn.layer setMasksToBounds:YES];
+            [btn.layer setCornerRadius:5.0];
+            [cell addSubview:btn];
+        }
     }
     else
     {
@@ -265,6 +250,17 @@ extern DDIDataModel *datam;
             lastTime.font=[UIFont systemFontOfSize:12];
             lastTime.tag=13;
             [cell addSubview:lastTime];
+            UIButton *btn=(UIButton *)[cell viewWithTag:104];
+            if(btn==nil)
+            {
+                btn=[[UIButton alloc]initWithFrame:CGRectMake(15, 4, 40, 40)];
+                btn.tag=104;
+                [btn addTarget:self action:@selector(showUserInfo:) forControlEvents:UIControlEventTouchUpInside];
+                
+                [btn.layer setMasksToBounds:YES];
+                [btn.layer setCornerRadius:5.0];
+                [cell addSubview:btn];
+            }
             
         }
         item=[filteredMessages objectAtIndex:indexPath.row];
@@ -273,39 +269,73 @@ extern DDIDataModel *datam;
     //[cell.imageView.layer setCornerRadius:5.0];
     
     
-    UILabel *title=(UILabel *)[cell viewWithTag:11];
+    UILabel *title=(UILabel *)[cell viewWithTag:101];
     title.text=[item objectForKey:@"respondName"];
-    UILabel *detail=(UILabel *)[cell viewWithTag:12];
-    detail.text=[item objectForKey:@"msgContent"];
+    //UILabel *detail=(UILabel *)[cell viewWithTag:102];
+    cell.detailTextLabel.text=[item objectForKey:@"msgContent"];
     NSString *msgType=[item objectForKey:@"msgType"];
     if([msgType isEqualToString:@"image"])
-        detail.text=@"[图片]";
-    UILabel *lastTime=(UILabel *)[cell viewWithTag:13];
+        cell.detailTextLabel.text=@"[图片]";
+    UILabel *lastTime=(UILabel *)[cell viewWithTag:103];
     lastTime.text=[item objectForKey:@"sendTime"];
     
     NSString *respondUser=[item objectForKey:@"respondUser"];
-    cell.imageView.image=[_headImageDic objectForKey:respondUser];
     
-    UIButton *btn=(UIButton *)[cell viewWithTag:14];
-    if(!btn)
+    UIImage *img=[_headImageDic objectForKey:respondUser];
+    if(img==nil)
     {
-        btn=[[UIButton alloc]initWithFrame:CGRectMake(15, 4, 40, 40)];
-        btn.tag=14;
-        [btn addTarget:self action:@selector(showUserInfo:) forControlEvents:UIControlEventTouchUpInside];
-        [cell addSubview:btn];
+        NSString *picPath=[CommonFunc getImageSavePath:respondUser ifexist:YES];
+        if(picPath!=nil)
+        {
+            img=[UIImage imageWithContentsOfFile:picPath];
+            img=[img scaleToSize1:CGSizeMake(40, 40)];
+            CGRect newSize=CGRectMake(0, 0,40,40);
+            img=[img cutFromImage:newSize];
+            [_headImageDic setObject:img forKey:respondUser];
+        }
+        else
+        {
+            img=_unknowMan;
+            
+            NSString *urlStr=[item objectForKey:@"respondUserImage"];
+            if(urlStr!=nil && urlStr.length>0 && ![urlStr isEqualToString:@"<null>"])
+            {
+                NSURL *url = [NSURL URLWithString:[urlStr URLEncodedString]];
+                ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:url];
+                [_requestArray addObject:request];
+                request.username=respondUser;
+                request.userInfo=[NSDictionary dictionaryWithObject:indexPath forKey:@"indexPath"];
+                [request setDelegate:self];
+                [request startAsynchronous];
+            }
+            
+        }
     }
-    btn.titleLabel.text=[item objectForKey:@"respondUser"];
+    cell.imageView.image=img;
     
+    UIButton *btn=(UIButton *)[cell viewWithTag:104];
+    //[btn setImage:img forState:UIControlStateNormal];
+    btn.titleLabel.text=[item objectForKey:@"respondUser"];
+    btn.frame=cell.imageView.frame;
+    [cell bringSubviewToFront:btn];
     
     NSNumber *unRead=[item objectForKey:@"unRead"];
     NSNumber *ifReceive=[item objectForKey:@"ifReceive"];
-    JSBadgeView *badgeView=[badgeDic objectForKey:respondUser];
+    JSBadgeView *badgeView=nil;
+    for(id item in cell.imageView.subviews)
+    {
+        if([item isKindOfClass:[JSBadgeView class]])
+        {
+            badgeView=item;
+            break;
+        }
+    }
     if(badgeView==nil)
     {
         badgeView = [[JSBadgeView alloc] initWithParentView:cell.imageView alignment:JSBadgeViewAlignmentTopRight];
-        badgeView.badgePositionAdjustment=CGPointMake(0,5);
-        [badgeDic setObject:badgeView forKey:respondUser];
+        
     }
+    badgeView.badgePositionAdjustment=CGPointMake(0,5);
     if(unRead.intValue>0 && ifReceive.intValue==1)
         badgeView.badgeText = [NSString stringWithFormat:@"%d",unRead.intValue];
     else
@@ -317,8 +347,8 @@ extern DDIDataModel *datam;
 {
     NSString *text=sender.titleLabel.text;
     NSArray *textArray=[text componentsSeparatedByString:@"_"];
-    
-    if([[textArray objectAtIndex:1] isEqualToString:@"学生"] && kUserType==1)
+    int userSchoolId=[[textArray objectAtIndex:6] intValue];
+    if([[textArray objectAtIndex:1] isEqualToString:@"学生"] && kUserType==1 && kSchoolId==userSchoolId)
     {
         [self performSegueWithIdentifier:@"showStudentInfo" sender:sender];
     }
@@ -341,7 +371,8 @@ extern DDIDataModel *datam;
         view.userWeiYi=[destArray objectAtIndex:0];
     }else if([segue.identifier isEqualToString:@"showStudentInfo"])
     {
-        DDIStudentInfo *view=segue.destinationViewController;
+        //DDIStudentInfo *view=segue.destinationViewController;
+        DDIMyInforView *view=segue.destinationViewController;
         NSArray *destArray=[btn.titleLabel.text componentsSeparatedByString:@","];
         view.userWeiYi=[destArray objectAtIndex:0];
     }
