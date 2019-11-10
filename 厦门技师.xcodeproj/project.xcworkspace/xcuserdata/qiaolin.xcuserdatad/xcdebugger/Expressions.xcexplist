@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "-[DDIWenJuanDetail tableView:cellForRowAtIndexPath:]:DDIWenJuanDetail.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDINewsDetail drawScrollContent]:DDINewsDetail.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIChengjiTitle addNew]:DDIChengjiTitle.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIWenJuanDetail popDatePicker:]:DDIWenJuanDetail.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "sender.titleLabel.text">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

@@ -10,6 +10,8 @@
 extern NSString *kInitURL;//默认单点webServic
 extern NSString *kUserIndentify;//用户登录后的唯一识别码
 extern Boolean kIOS7;
+extern NSString *kYingXinURL;
+extern NSString *kStuState;
 @interface DDIWenJuanTitle ()
 
 @end
@@ -56,7 +58,16 @@ extern Boolean kIOS7;
 
 -(void)loadTitleData
 {
-    NSString *urlStr=[NSString stringWithFormat:@"%@InterfaceStudent/%@",kInitURL,self.interfaceUrl];
+    NSString *urlStr;
+    if([[self.interfaceUrl lowercaseString] hasPrefix:@"http"])
+        urlStr=self.interfaceUrl;
+    else
+    {
+        if([kStuState isEqualToString:@"新生状态"])
+            urlStr=[NSString stringWithFormat:@"%@%@",kYingXinURL,self.interfaceUrl];
+        else
+            urlStr=[NSString stringWithFormat:@"%@InterfaceStudent/%@",kInitURL,self.interfaceUrl];
+    }
     NSURL *url = [NSURL URLWithString:urlStr];
     ASIFormDataRequest *request = [ASIFormDataRequest requestWithURL:url];
     NSError *error;
@@ -64,6 +75,7 @@ extern Boolean kIOS7;
     [dic setObject:kUserIndentify forKey:@"用户较验码"];
     NSNumber *timeStamp=[[NSNumber alloc] initWithLong:[[NSDate new] timeIntervalSince1970]];
     [dic setObject:timeStamp forKey:@"DATETIME"];
+ 
     request.username=@"初始化标题";
     NSData *postData=[NSJSONSerialization dataWithJSONObject:dic options:NSJSONWritingPrettyPrinted error:&error];
     NSString *postStr = [[NSString alloc] initWithData:postData encoding:NSUTF8StringEncoding];
@@ -72,8 +84,6 @@ extern Boolean kIOS7;
     [request setDelegate:self];
     [request startAsynchronous];
     [requestArray addObject:request];
-    alertTip = [[OLGhostAlertView alloc] initWithTitle:@"正在获取数据" message:nil timeout:0 dismissible:NO];
-    [alertTip showInView:self.view];
     
 }
 - (void)requestFinished:(ASIHTTPRequest *)request
@@ -84,7 +94,7 @@ extern Boolean kIOS7;
             [alertTip removeFromSuperview];
         NSData *data = [request responseData];
         NSString* dataStr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-        data   = [[NSData alloc] initWithBase64Encoding:dataStr];
+        data   = [[NSData alloc] initWithBase64EncodedString:dataStr options:0];
         NSDictionary *dict= [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments error:nil];
         if(dict)
             _titleArray=[[NSMutableArray alloc] initWithArray:[dict objectForKey:@"调查问卷数值"]];
@@ -209,6 +219,8 @@ extern Boolean kIOS7;
     {
         NSArray *sepArray=[imageUrl componentsSeparatedByString:@"/"];
         NSString *filename=[sepArray objectAtIndex:sepArray.count-1];
+        if(filename.length==0 && sepArray.count>1)
+            filename=[sepArray objectAtIndex:sepArray.count-2];
         filename=[savePath stringByAppendingString:filename];
         if([CommonFunc fileIfExist:filename])
         {
@@ -232,7 +244,7 @@ extern Boolean kIOS7;
             aiv.activityIndicatorViewStyle=UIActivityIndicatorViewStyleGray;
             [parentView addSubview:aiv];
             [aiv startAnimating];
-            
+            imageUrl = [imageUrl stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
             NSURL *url = [NSURL URLWithString:imageUrl];
             ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:url];
             request.username=@"下载图片";
@@ -263,7 +275,11 @@ extern Boolean kIOS7;
     NSIndexPath *indexPath=(NSIndexPath *)sender;
     NSDictionary *item=[_titleArray objectAtIndex:indexPath.row];
     NSString *detailURL=[item objectForKey:@"内容项URL"];
-    NSString *urlStr=[NSString stringWithFormat:@"%@InterfaceStudent/%@",kInitURL,self.interfaceUrl];
+    NSString *urlStr;
+    if([[self.interfaceUrl lowercaseString] hasPrefix:@"http"])
+        urlStr=self.interfaceUrl;
+    else
+        urlStr=[NSString stringWithFormat:@"%@InterfaceStudent/%@",kInitURL,self.interfaceUrl];
     urlStr=[urlStr stringByAppendingString:detailURL];
     
     

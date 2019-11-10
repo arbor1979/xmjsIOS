@@ -1,0 +1,712 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "-[DDIDataModel queryMsgByUserId:maxId:minId:]:DDIDataModel.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIHelpView openFile:]:DDIHelpView.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "[path stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIMyInforView viewDidLoad]:DDIMyInforView.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIHuiZong requestFinished:]:DDIHuiZong.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "filename=[savepath stringByAppendingString:[CommonFunc getFileRealName:filename]];">
+            </PersistentString>
+            <PersistentString
+               value = "data=[[NSData alloc] initWithBase64Encoding:dataStr];">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIAlbumScrollPage didscrollToNewPage:]:DDIAlbumScrollPage.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIWenJuanDetail popComboPicker:]:DDIWenJuanDetail.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "sender.titleLabel.text">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIClassAttend tableView:cellForRowAtIndexPath:]:DDIClassAttend.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "student">
+            </PersistentString>
+            <PersistentString
+               value = "stuName">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIHuiZong getNewsList:Item:]:DDIHuiZong.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIWenJuanDetail loadDetailData]:DDIWenJuanDetail.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.interfaceUrl">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIAlbumPageItem webViewDidFinishLoad:]:DDIAlbumPageItem.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "index.row">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIStudentInfo requestFinished:]:DDIStudentInfo.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIAppDelegate application:didFinishLaunchingWithOptions:]:DDIAppDelegate.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "[[[UIDevice currentDevice]systemVersion] floatValue]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIAlbumPageItem viewDidLoad]:DDIAlbumPageItem.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.tableView">
+            </PersistentString>
+            <PersistentString
+               value = "self.view">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIMyInforView tableView:cellForRowAtIndexPath:]:DDIMyInforView.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "btn.superview">
+            </PersistentString>
+            <PersistentString
+               value = "[theTeacherDic objectForKey:@&quot;&#x4e3b;&#x8981;&#x89d2;&#x8272;&#x540d;&#x79f0;&quot;]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDScrollViewController reloadData]:DDScrollViewController.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.offsetRadio">
+            </PersistentString>
+            <PersistentString
+               value = "self.scrollView">
+            </PersistentString>
+            <PersistentString
+               value = "self.activeIndex">
+            </PersistentString>
+            <PersistentString
+               value = "self.numberOfControllers">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIKaoQinTitle drawDataFromDic]:DDIKaoQinTitle.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIAlbumPageItem tableView:heightForRowAtIndexPath:]:DDIAlbumPageItem.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.view">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIClassSchedule initTitleBar]:DDIClassSchedule.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.cornerView.backgroundColor">
+            </PersistentString>
+            <PersistentString
+               value = "tv.backgroundColor">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIWenJuanDetail tableView:cellForRowAtIndexPath:]:DDIWenJuanDetail.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "cell.contentView.subviews">
+            </PersistentString>
+            <PersistentString
+               value = "subitem">
+            </PersistentString>
+            <PersistentString
+               value = "[subarray objectAtIndex:i]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIVLoginMain postUserInfo]:DDIVLoginMain.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "request.allowCompressedResponse">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIAlbumPersonal tableView:cellForRowAtIndexPath:]:DDIAlbumPersonal.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "iconName">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIBaodaoHandle tableView:heightForRowAtIndexPath:]:DDIBaodaoHandle.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "fieldsDic">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDINewsTitle tableView:didSelectRowAtIndexPath:]:DDINewsTitle.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIClassSchedule openAttendView:]:DDIClassSchedule.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "buttonArray">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDScrollViewController setOffsetRadio:]:DDScrollViewController.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.numberOfControllers">
+            </PersistentString>
+            <PersistentString
+               value = "self.activeIndex">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIAlbumScrollPage requestFinished:]:DDIAlbumScrollPage.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIClassAttend dingMingClick:]:DDIClassAttend.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIChengjiDetail drawFujianFromArray:left:array:parent:]:DDIChengjiDetail.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "parentView.subviews">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIKeTangPingJia drawImageFromArray]:DDIKeTangPingJia.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.view">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "__41-[DDIMultiSelLinkMan removeFromSelected:]_block_invoke211:DDIMultiSelLinkMan.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDINewsTitle tableView:cellForRowAtIndexPath:]:DDINewsTitle.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "[NSURL URLWithString:news.image]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIMyInforView requestFinished:]:DDIMyInforView.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIHuiZong updateBadge]:DDIHuiZong.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDScrollViewController scrollViewDidScroll:]:DDScrollViewController.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "scrollView.contentOffset.x">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIHelpView viewDidLoad]:DDIHelpView.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.bottomBar.constraints">
+            </PersistentString>
+            <PersistentString
+               value = "request.URL">
+            </PersistentString>
+            <PersistentString
+               value = "consts">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[TQRichTextView analyzeText:]:TQRichTextView.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[WaterFCell initWithFrame:]:WaterFCell.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "frame.origin.y==NAN">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIChengjiDetail tableView:heightForRowAtIndexPath:]:DDIChengjiDetail.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.view">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIChengjiDetail downloadOrOpen:]:DDIChengjiDetail.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIWenJuanDetail didSelectedRadioButton:groupId:]:DDIWenJuanDetail.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIClassAttend saveAttend]:DDIClassAttend.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIHuiZong viewDidLoad]:DDIHuiZong.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "nav.restorationIdentifier">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDILinkManGroup prepareForSegue:sender:]:DDILinkManGroup.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "cell.superview">
+            </PersistentString>
+            <PersistentString
+               value = "cell.superview.superview">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIChengjiDetail tableView:cellForRowAtIndexPath:]:DDIChengjiDetail.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "[UIScreen mainScreen].bounds.size.width">
+            </PersistentString>
+            <PersistentString
+               value = "cell.subviews">
+            </PersistentString>
+            <PersistentString
+               value = "self.view">
+            </PersistentString>
+            <PersistentString
+               value = "savepath">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIClassAttend tableView:viewForHeaderInSection:]:DDIClassAttend.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIMyStatus reloadHeadImage]:DDIMyStatus.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDScrollViewController initControl]:DDScrollViewController.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.view">
+            </PersistentString>
+            <PersistentString
+               value = "self.navigationController.navigationBar">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[PieChartViewController viewDidLoad]:PieChartViewController.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIMessageList tableView:cellForRowAtIndexPath:]:DDIMessageList.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "detail.text">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIHelpView webViewDidFinishLoad:]:DDIHelpView.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.webView.hidden">
+            </PersistentString>
+            <PersistentString
+               value = "[webView.request URL]">
+            </PersistentString>
+            <PersistentString
+               value = "self.webView.request.URL">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIChengjiTitle prepareForSegue:sender:]:DDIChengjiTitle.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "[urlStr componentsSeparatedByString:@&quot;?&quot;]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "+[CommonFunc getCacheImagePath:]:CommonFunc.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIVLoginMain requestFinished:]:DDIVLoginMain.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "[request isResponseCompressed]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIPraiseDetail openPersonalPage:]:DDIPraiseDetail.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "sender.titleLabel">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIChengjiTitle tableView:didSelectRowAtIndexPath:]:DDIChengjiTitle.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIMainMenu requestFinished:]:DDIMainMenu.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIClassSchedule drawClassRect:index:]:DDIClassSchedule.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "innerBtn.titleLabel.numberOfLines">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIHelpView webView:shouldStartLoadWithRequest:navigationType:]:DDIHelpView.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "[NSURL URLWithString:url]">
+            </PersistentString>
+            <PersistentString
+               value = "navigationType==UIWebViewNavigationTypeLinkClicked">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIClassAttend viewDidLoad]:DDIClassAttend.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "userInfoDic">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[QRadioButton addToGroup]:QRadioButton.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[UIViewController loadViewIfRequired]:(null)">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.view">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIWenJuanDetail requestFinished:]:DDIWenJuanDetail.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIClassSchedule prepareForSegue:sender:]:DDIClassSchedule.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIWenJuanDetail imagePickerController:didFinishPickingMediaWithInfo:]:DDIWenJuanDetail.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIChatView imagePickerController:didFinishPickingMediaWithInfo:]:DDIChatView.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIHuiZong collectionView:didSelectItemAtIndexPath:]:DDIHuiZong.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIGifView addLabels:]:DDIGifView.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.frame">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIStudentInfo viewDidLoad]:DDIStudentInfo.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "[UIScreen mainScreen]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIAlbumPageItem openPersonalPage:]:DDIAlbumPageItem.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.parentViewController">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIChengjiTitle requestFinished:]:DDIChengjiTitle.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIChatView dataForRowAtIndexPath:]:DDIChatView.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIVLoginMain viewDidLoad]:DDIVLoginMain.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "[UIScreen mainScreen]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[QRadioButton setChecked:]:QRadioButton.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.highlighted">
+            </PersistentString>
+            <PersistentString
+               value = "self.currentImage">
+            </PersistentString>
+            <PersistentString
+               value = "self.selected">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIWenJuanDetail addPhotoClick:]:DDIWenJuanDetail.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "sender.tag">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIChengjiDetail requestFinished:]:DDIChengjiDetail.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "savePath">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIKeTangExam requestFinished:]:DDIKeTangExam.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIPraiseDetail tableView:cellForRowAtIndexPath:]:DDIPraiseDetail.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "headBtn.titleLabel">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIAlbumPageItem getImageByUserIdToButton:picUrl:imageview:index:]:DDIAlbumPageItem.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "_imageItem">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIClassSchedule viewDidLoad]:DDIClassSchedule.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.cornerView.backgroundColor">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "+[TQRichTextEmojiRun analyzeText:runsArray:]:TQRichTextEmojiRun.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIHelpView webView:didFailLoadWithError:]:DDIHelpView.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "[NSURL URLWithString:path]">
+            </PersistentString>
+            <PersistentString
+               value = "webView.request.URL">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIWenJuanDetail popComboPickerTwo:]:DDIWenJuanDetail.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDINewsTitle requestFailed:]:DDINewsTitle.m">
+      </ContextState>
+      <ContextState
+         contextName = "main:main.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "prog">
+            </PersistentString>
+            <PersistentString
+               value = "self.interfaceUrl">
+            </PersistentString>
+            <PersistentString
+               value = "[UIFont systemFontOfSize:15]">
+            </PersistentString>
+            <PersistentString
+               value = "teacherInfoDic">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIMultiSelLinkMan updateHeadSelImage:]:DDIMultiSelLinkMan.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDINotifySetup viewDidLoad]:DDINotifySetup.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "[[UIDevice currentDevice]systemVersion]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[TQRichTextView drawRect:]:TQRichTextView.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.textColor">
+            </PersistentString>
+            <PersistentString
+               value = "CFArrayGetCount(runs)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIGifView setMsgContent:]:DDIGifView.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "minGifViewWidth">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDILinkManGroup tableView:cellForRowAtIndexPath:]:DDILinkManGroup.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDICourseInfo requestFinished:]:DDICourseInfo.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIWenJuanDetail saveAnswer]:DDIWenJuanDetail.m">
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIClassSchedule done]:DDIClassSchedule.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.bgImage">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIAlbumSend tableView:heightForRowAtIndexPath:]:DDIAlbumSend.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "_lbAddress.text">
+            </PersistentString>
+            <PersistentString
+               value = "_lbAddress.font">
+            </PersistentString>
+            <PersistentString
+               value = "[_lbAddress.text sizeWithFont:_lbAddress.font constrainedToSize:CGSizeMake(_lbAddress.frame.size.width, 1000.0f) lineBreakMode:NSLineBreakByWordWrapping]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIClassSchedule ifChangeWeekToCurweek]:DDIClassSchedule.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "[userDefaultes valueForKey:@&quot;&#x521d;&#x59cb;&#x5316;&#x65f6;&#x95f4;&quot;]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDICompletePercent tableView:cellForRowAtIndexPath:]:DDICompletePercent.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "[UIFont systemFontOfSize:15]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIAlbumPageItem tableView:cellForRowAtIndexPath:]:DDIAlbumPageItem.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.tableView">
+            </PersistentString>
+            <PersistentString
+               value = "self.view">
+            </PersistentString>
+            <PersistentString
+               value = "left+6*45+40">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDILinkManGroup requestFinished:]:DDILinkManGroup.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "request.url.absoluteString">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIHelpView webViewDidStartLoad:]:DDIHelpView.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "[[webView request] URL]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "__79-[XHDrawerController closeDrawerAnimated:velocity:animationOptions:completion:]_block_invoke:XHDrawerController.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.scrollView">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[DDIMainMenu viewDidLoad]:DDIMainMenu.m">
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>
